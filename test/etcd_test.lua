@@ -26,8 +26,15 @@ local function gen_key()
     return res
 end
 
-local function gen_value()
+local function gen_value(opts)
+    local opts = opts or {}
     local res = 'value_' .. tostring(kv_next)
+    if opts.size then
+        res = res .. '_'
+        for i = 1, opts.size - string.len(res) do
+            res = res .. string.char(i % 256)
+        end
+    end
     kv_next = kv_next + 1
     return res
 end
@@ -215,6 +222,32 @@ g.test_put_basic = function()
     -- Get it back.
     local response = g.client:range(key)
     assert_range_response(response, {exp_kvs = {{key, value}}})
+end
+
+-- Put relatively large bytes value, which contains all 256
+-- possible bytes.
+--
+-- It is well knows that base64 have different encoding variants:
+-- with or without padding, with the standard alphabet or with URL
+-- safe alphabet, with or without line feeds.
+--
+-- Here we verify that our encoding and decoding functions are
+-- suitable for working with etcd.
+g.test_put_large = function()
+    -- A size that is not divisible by 3 causes padding to be
+    -- added (if encoding with padding is used).
+    local size = 1025
+    local key = gen_key()
+    local value = gen_value({size = size})
+
+    -- Put a key-value.
+    local response = g.client:put(key, value)
+    assert_put_response(response)
+
+    -- Get it back.
+    local response = g.client:range(key)
+    assert_range_response(response, {exp_kvs = {{key, value}}})
+    print(response.kvs[1].value)
 end
 
 -- Verify that nil key is forbidden.

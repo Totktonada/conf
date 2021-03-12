@@ -222,10 +222,23 @@ end
 
 -- https://developers.google.com/protocol-buffers/docs/proto3#json
 
+-- Regarding base64 encoding: etcd ignores newlines (see [1] and
+-- [2]) in incoming bytes fields, but there is no sense to
+-- send extra newline bytes. So we pass the `nowrap` option.
+--
+-- etcd accepts standard and urlsafe alphabets both and encoding
+-- with/without paddings both (see [3]). We use the same encoding
+-- as etcd itself: standard alphabet, with paddings.
+--
+-- [1]: https://github.com/grpc-ecosystem/grpc-gateway/pull/565
+-- [2]: https://golang.org/pkg/encoding/base64/#Encoding.Decode
+-- [3]: https://developers.google.com/protocol-buffers/docs/proto3#json
 local encode_opts = {
     transforms = {
         string = identity,
-        bytes = digest.base64_encode,
+        bytes = function(src)
+            return digest.base64_encode(src, {nowrap = true})
+        end,
         bool = identity,
         int64 = identity,
         uint64 = identity,
