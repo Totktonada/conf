@@ -24,7 +24,7 @@ apidoc:
 			[0] = 'tarantool',                         \
 			'-c', '$(PROJECT_DIR)/doc/ldoc/config.ld', \
 			'-d', '$(PROJECT_DIR)/doc/apidoc',         \
-			'-p', 'confucius',                         \
+			'-p', 'conf',                              \
 			'$(PROJECT_DIR)'                           \
 		}                                              \
 		require('ldoc')                                \

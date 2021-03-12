@@ -1,5 +1,5 @@
 local digest = require('digest')
-local utils = require('confucius.driver.etcd.utils')
+local utils = require('conf.driver.etcd.utils')
 
 local array_mt = {__serialize = 'sequence'}
 local map_mt = {__serialize = 'mapping'}

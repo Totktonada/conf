@@ -1,6 +1,6 @@
 local digest = require('digest')
 local t = require('luatest')
-local grpc_json = require('confucius.driver.etcd.grpc_json')
+local grpc_json = require('conf.driver.etcd.grpc_json')
 
 local g = t.group()
 

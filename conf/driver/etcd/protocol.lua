@@ -1,4 +1,4 @@
-local grpc_json = require('confucius.driver.etcd.grpc_json')
+local grpc_json = require('conf.driver.etcd.grpc_json')
 
 local function new()
     local protocol = grpc_json.new_protocol()

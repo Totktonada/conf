@@ -3,8 +3,8 @@ local log = require('log')
 local http_client_lib = require('http.client')
 local t = require('luatest')
 local Process = require('luatest.process')
-local etcd_utils = require('confucius.driver.etcd.utils')
-local etcd_client_lib = require('confucius.driver.etcd')
+local etcd_utils = require('conf.driver.etcd.utils')
+local etcd_client_lib = require('conf.driver.etcd')
 
 local DEFAULT_ENDPOINT = 'http://localhost:2379'
 

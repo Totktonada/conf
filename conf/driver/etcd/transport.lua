@@ -1,5 +1,5 @@
 --- HTTP transport for etcd client.
--- @module confucius.driver.etcd.transport
+-- @module conf.driver.etcd.transport
 
 -- TODO: Save cluster_id as first connect and validate it at
 -- reconnects.
@@ -7,8 +7,8 @@
 local log = require('log')
 local json = require('json')
 local http_client_lib = require('http.client')
-local utils = require('confucius.driver.etcd.utils')
-local etcd_error = require('confucius.driver.etcd.error')
+local utils = require('conf.driver.etcd.utils')
+local etcd_error = require('conf.driver.etcd.error')
 
 -- Forward declarations.
 local http_client_new_opts_default
@@ -156,8 +156,8 @@ http_error_mt = {
         elseif getmetatable(rhs) == http_error_mt then
             return lhs .. tostring(rhs)
         else
-            error('confucius.driver.etcd.transport.http_error_mt.__concat():' ..
-                ' neither of args is an http error')
+            error('conf.driver.etcd.transport.http_error_mt.__concat(): ' ..
+                'neither of args is an http error')
         end
     end,
     __tostring = function(self)

@@ -1,5 +1,5 @@
-file = 'confucius'
-title = 'confucius API reference'
+file = 'conf'
+title = 'conf API reference'
 
 template = 'doc/ldoc/assets'
 style = 'doc/ldoc/assets'

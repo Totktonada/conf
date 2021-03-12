@@ -1,9 +1,9 @@
 --- etcd driver.
--- @module confucius.driver.etcd
+-- @module conf.driver.etcd
 
-local utils = require('confucius.driver.etcd.utils')
-local protocol = require('confucius.driver.etcd.protocol')
-local transport = require('confucius.driver.etcd.transport')
+local utils = require('conf.driver.etcd.utils')
+local protocol = require('conf.driver.etcd.protocol')
+local transport = require('conf.driver.etcd.transport')
 
 -- Forward declaration.
 local mt
@@ -85,7 +85,7 @@ local ALL = '\0'
 --
 -- @return etcd client instance.
 --
--- @function confucius.driver.etcd.new
+-- @function conf.driver.etcd.new
 local function new(opts)
     -- XXX: Handle user & password: give transport a callback
     -- to obtain authorization header.
@@ -366,7 +366,7 @@ mt = {
 -- @integer    code
 --     GRPC error code.
 --
---     Those codes are listed in the `confucius.driver.etcd.error`
+--     Those codes are listed in the `conf.driver.etcd.error`
 --     module.
 -- @string     message
 --     What is going on wrong.
