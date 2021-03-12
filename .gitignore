@@ -1,0 +1,8 @@
+# Vim Swap files.
+*.sw[a-z]
+
+# Generated API documentation.
+doc/apidoc
+
+# Installed luarocks: ldoc, luacheck, luatest.
+.rocks
