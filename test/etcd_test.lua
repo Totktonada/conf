@@ -149,8 +149,9 @@ local function get_kv(g, key)
 end
 
 local function verify_kv(g, key, value)
+    local exp_kvs = {{key, value}}
     local response = g.client:range(key)
-    assert_range_response(response, {exp_kvs = {{key, value}}})
+    assert_range_response(response, {exp_kvs = exp_kvs})
 end
 
 -- Return them sorted by keys.
@@ -220,8 +221,9 @@ g.test_put_basic = function()
     assert_put_response(response)
 
     -- Get it back.
+    local exp_kvs = {{key, value}}
     local response = g.client:range(key)
-    assert_range_response(response, {exp_kvs = {{key, value}}})
+    assert_range_response(response, {exp_kvs = exp_kvs})
 end
 
 -- Put relatively large bytes value, which contains all 256
@@ -245,8 +247,9 @@ g.test_put_large = function()
     assert_put_response(response)
 
     -- Get it back.
+    local exp_kvs = {{key, value}}
     local response = g.client:range(key)
-    assert_range_response(response, {exp_kvs = {{key, value}}})
+    assert_range_response(response, {exp_kvs = exp_kvs})
     print(response.kvs[1].value)
 end
 
@@ -548,8 +551,9 @@ g.test_range_with_revision_compacted = function()
     })
 
     -- While the newer revision is available.
+    local exp_kvs = {{key, value_2}}
     local response = g.client:range(key, nil, {revision = revision_2})
-    assert_range_response(response, {exp_kvs = {{key, value_2}}})
+    assert_range_response(response, {exp_kvs = exp_kvs})
 end
 
 -- TODO: Fetch with particular sortings order / target.
