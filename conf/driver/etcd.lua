@@ -211,16 +211,16 @@ end
 --     A key, a key prefix or a range start (depending of
 --     'range_end' value).
 --
---     The special value `confusius.driver.etcd.ALL` means no
---     lower boundary.
+--     The special value `conf.driver.etcd.ALL` means no lower
+--     boundary.
 -- @string range_end
 --     Upper boundary of the range (exclusive).
 --
---     The special value `confusius.driver.etcd.NEXT` means to
---     fetch all values prefixed with 'key'.
+--     The special value `conf.driver.etcd.NEXT` means to fetch
+--     all values prefixed with 'key'.
 --
---     The special value `confusius.driver.etcd.ALL` means no
---     upper boundary.
+--     The special value `conf.driver.etcd.ALL` means no upper
+--     boundary.
 --
 --     A function (key -> range_end) may be passed here.
 -- @string opts
