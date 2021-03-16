@@ -250,7 +250,6 @@ g.test_put_large = function()
     local exp_kvs = {{key, value}}
     local response = g.client:range(key)
     assert_range_response(response, {exp_kvs = exp_kvs})
-    print(response.kvs[1].value)
 end
 
 -- Verify that nil key is forbidden.
