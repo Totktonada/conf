@@ -182,8 +182,8 @@ local function request(self, location, request)
     local url = base_url .. location
     local response = self.http_client:post(url, request,
         self.http_client_request_opts)
-    log.verbose('etcd transport | response: %s %s', location, response.body or
-        '<no response body>')
+    log.verbose('etcd transport | response (%d): %s %s', response.status,
+        location, response.body or '<no response body>')
     if response.status ~= 200 then
         if response.headers['content-type'] == 'application/json' then
             error(etcd_error.new(json.decode(response.body)))
