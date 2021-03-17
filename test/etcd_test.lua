@@ -45,7 +45,12 @@ end
 
 g.before_all(function()
     -- Show logs from the etcd transport.
-    log.cfg({level = 6})
+    --
+    -- Configuring of a logger without box.cfg() call is available
+    -- since tarantool-2.5.0-100-ga94a9b3fd.
+    if log.cfg then
+        log.cfg({level = 6})
+    end
 
     -- Wake up etcd.
     g.etcd_datadir = fio.tempdir()
