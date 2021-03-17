@@ -185,7 +185,9 @@ local function request(self, location, request)
     log.verbose('etcd transport | response (%d): %s %s', response.status,
         location, response.body or '<no response body>')
     if response.status ~= 200 then
-        if response.headers['content-type'] == 'application/json' then
+        local has_json_body = response.headers ~= nil and
+            response.headers['content-type'] == 'application/json'
+        if has_json_body then
             error(etcd_error.new(json.decode(response.body)))
         end
         -- TODO: There is no test for this branch.
