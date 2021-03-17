@@ -6,8 +6,6 @@ local Process = require('luatest.process')
 local etcd_utils = require('conf.driver.etcd.utils')
 local etcd_client_lib = require('conf.driver.etcd')
 
-local DEFAULT_ENDPOINT = 'http://localhost:2379'
-
 local g = t.group()
 
 -- {{{ Data generators
@@ -41,6 +39,113 @@ end
 
 -- }}} Data generators
 
+-- {{{ ETCD cluster management
+
+local function wait_etcd_node_started(node_id)
+    local server = g.etcd_servers[node_id]
+    assert(server.process ~= nil)
+    t.helpers.retrying({}, function()
+        log.verbose('etcd_test | waiting for etcd#%d startup', node_id)
+        local url = server.client_url .. '/v3/cluster/member/list'
+        local response = http_client_lib.post(url)
+        t.assert(response.status == 200, 'verify that etcd started')
+    end)
+end
+
+-- Waits for starting unless opts.nowait is true.
+local function start_etcd_node(node_id, opts)
+    local opts = opts or {}
+
+    local server = g.etcd_servers[node_id]
+    assert(server.process == nil)
+    server.process = Process:start(unpack(server.start_args))
+    if not opts.nowait then
+        wait_etcd_node_started(node_id)
+    end
+end
+
+-- Waits for stopping.
+local function stop_etcd_node(node_id)
+    local server = g.etcd_servers[node_id]
+    assert(server.process ~= nil)
+    server.process:kill()
+    t.helpers.retrying({}, function()
+        log.verbose('etcd_test | waiting for etcd#%d teardown', node_id)
+        t.assert_not(server.process:is_alive(), 'verify that etcd stopped')
+    end)
+    server.process = nil
+end
+
+local function start_etcd_cluster()
+    local client_urls = {
+        'http://localhost:2379',
+        'http://localhost:2381',
+        'http://localhost:2383',
+    }
+    local peer_urls = {
+        'http://localhost:2380',
+        'http://localhost:2382',
+        'http://localhost:2384',
+    }
+
+    local initial_cluster = table.concat({
+        ('test1=%s'):format(peer_urls[1]),
+        ('test2=%s'):format(peer_urls[2]),
+        ('test3=%s'):format(peer_urls[3]),
+    }, ',')
+
+    -- Initialize nodes parameters.
+    g.etcd_servers = {}
+    g.etcd_datadir_root = fio.tempdir()
+    for i = 1, #client_urls do
+        local name = ('test%d'):format(i)
+        local datadir = ('%s/%s'):format(g.etcd_datadir_root, name)
+        local env = {
+            ETCD_NAME = name,
+            ETCD_DATA_DIR = datadir,
+            ETCD_LISTEN_CLIENT_URLS = client_urls[i],
+            ETCD_ADVERTISE_CLIENT_URLS = client_urls[i],
+            -- Clustering.
+            ETCD_LISTEN_PEER_URLS = peer_urls[i],
+            ETCD_INITIAL_ADVERTISE_PEER_URLS = peer_urls[i],
+            ETCD_INITIAL_CLUSTER = initial_cluster,
+            ETCD_INITIAL_CLUSTER_STATE = 'new',
+        }
+        local start_args = {'/usr/bin/etcd', {}, env, {
+            output_prefix = ('etcd #%d'):format(i),
+        }}
+
+        g.etcd_servers[i] = {}
+        g.etcd_servers[i].client_url = client_urls[i]
+        g.etcd_servers[i].datadir = datadir
+        g.etcd_servers[i].start_args = start_args
+    end
+
+    -- Wake up nodes.
+    for i = 1, #client_urls do
+        start_etcd_node(i, {nowait = true})
+    end
+
+    -- Wait for starting.
+    for i = 1, #client_urls do
+        wait_etcd_node_started(i)
+    end
+
+    g.etcd_client_urls = client_urls
+end
+
+local function stop_etcd_cluster()
+    g.etcd_client_urls = nil
+    for i = 1, #g.etcd_servers do
+        stop_etcd_node(i)
+    end
+    fio.rmtree(g.etcd_datadir_root)
+    g.etcd_datadir_root = nil
+    g.etcd_servers = nil
+end
+
+-- }}} ETCD cluster management
+
 -- {{{ Setup / teardown
 
 g.before_all(function()
@@ -52,37 +157,18 @@ g.before_all(function()
         log.cfg({level = 6})
     end
 
-    -- Wake up etcd.
-    g.etcd_datadir = fio.tempdir()
-    g.etcd_process = Process:start('/usr/bin/etcd', {}, {
-        ETCD_DATA_DIR = g.etcd_datadir,
-        ETCD_LISTEN_CLIENT_URLS = DEFAULT_ENDPOINT,
-        ETCD_ADVERTISE_CLIENT_URLS = DEFAULT_ENDPOINT,
-    }, {
-        output_prefix = 'etcd',
-    })
-    t.helpers.retrying({}, function()
-        local url = DEFAULT_ENDPOINT .. '/v3/cluster/member/list'
-        local response = http_client_lib.post(url)
-        t.assert(response.status == 200, 'etcd started')
-    end)
+    start_etcd_cluster()
 
     -- Create a client.
     g.client = etcd_client_lib.new({
-        endpoints = {DEFAULT_ENDPOINT},
+        endpoints = g.etcd_client_urls,
         -- Uncomment for debugging.
         -- http_client = {request = {verbose = true}},
     })
 end)
 
 g.after_all(function()
-    -- Tear down etcd.
-    g.etcd_process:kill()
-    t.helpers.retrying({}, function()
-        t.assert_not(g.etcd_process:is_alive(), 'etcd is still running')
-    end)
-    g.etcd_process = nil
-    fio.rmtree(g.etcd_datadir)
+    stop_etcd_cluster()
 
     -- Drop the client.
     g.client = nil
@@ -604,7 +690,7 @@ end
 
 g.test_extend_protocol = function()
     local client = etcd_client_lib.new({
-        endpoints = {DEFAULT_ENDPOINT},
+        endpoints = g.etcd_client_urls,
     })
 
     -- Add a message to the protocol.
