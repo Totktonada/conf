@@ -165,22 +165,119 @@ http_error_mt = {
     end,
 }
 
-local function new_http_error(response)
+local function http_error_new(response)
     return setmetatable({
         response = response,
     }, http_error_mt)
 end
 
--- Raise http client internal errors: OOM, unknown libcurl error.
+local function http_error_ack(obj)
+    if type(obj) == 'table' and getmetatable(obj) == http_error_mt then
+        return obj
+    end
+    return nil
+end
+
+-- Those errors are documented in [1].
 --
--- Raise HttpError or EtcdError.
-local function request(self, location, request)
-    -- XXX: Round robin.
-    local request = json.encode(request)
-    log.verbose('etcd transport | request: %s %s', location, request)
+-- Here we hardcode error messages from [2]. They remain the same
+-- since libcurl-7.17.0 (Sep 2007).
+--
+-- We can call curl_easy_strerror() using ffi, but I'm not sure
+-- that the symbol is exposed on all tarantool versions / builds.
+--
+-- Hopefully tarantool will offer more stable way to differentiate
+-- http client errors in future, see [3].
+--
+-- [1]: https://curl.se/libcurl/c/libcurl-errors.html
+-- [2]: https://github.com/curl/curl/blob/curl-7_71_1/lib/strerror.c
+-- [3]: https://github.com/tarantool/tarantool/issues/5916
+local libcurl_transient_error_messages = {
+    -- CURLE_COULDNT_RESOLVE_PROXY
+    ["Couldn't resolve proxy name"] = true,
+    -- CURLE_COULDNT_RESOLVE_HOST
+    ["Couldn't resolve host name"] = true,
+    -- CURLE_COULDNT_CONNECT
+    ["Couldn't connect to server"] = true,
+}
+
+-- A request may be retried in the following cases (see [1]):
+--
+-- 1. UNAVAILABLE etcd error.
+-- 2. libcurl errors, which certainly states that the request does
+--    not reach the server (say, unable to connect).
+-- 3. In case of a read request: any network / HTTP error (such
+--    as timeout).
+--
+-- [1]: https://github.com/etcd-io/etcd/blob/v3.4.15/clientv3/retry.go#L46-L92
+--
+-- Returns true when the request may be retried after given error.
+local function is_error_transient(err, request_is_read_only)
+    if etcd_error.ack(err) then
+        return err.code == etcd_error.UNAVAILABLE
+    end
+    if http_error_ack(err) then
+        if request_is_read_only then
+            return true
+        end
+        if libcurl_transient_error_messages[err.response.reason] then
+            return true
+        end
+    end
+    return false
+end
+
+-- Choose most descriptive error.
+--
+-- Let's consider an example cluster of three nodes:
+--
+-- | a  | b  | c  |
+-- | up | up | up |
+--
+-- Let's assume that nodes 'a' and 'b' go down:
+--
+-- | a    | b    | c              |
+-- | down | down | up (no quorum) |
+--
+-- Now we attempt to execute a request on all nodes and receive
+-- the following errors:
+--
+-- a: network error CURLE_COULDNT_CONNECT (http error instance)
+-- b: network error CURLE_COULDNT_CONNECT (http error instance)
+-- c: etcd error UNAVAILABLE
+--
+-- Our strategy is round robin, but we can start from 'a', from
+-- 'b' or from 'c' depending on previous failures. So, if we'll
+-- choose a first or a last error, the error will be unpredictable
+-- for given cluster state.
+--
+-- The solution is to report an etcd error if there are etcd errors
+-- and http / network errors.
+local function choose_more_detailed_error(err_1, err_2)
+    if err_1 == nil then
+        return err_2
+    end
+    if not etcd_error.ack(err_1) and etcd_error.ack(err_2) then
+        return err_2
+    end
+    return err_1
+end
+
+-- Returns either:
+--
+-- - false, err
+-- - true, response
+local function request_current_node(self, location, encoded_request,
+        attempt_num)
     local base_url = self.endpoints[self.endpoint_idx]
     local url = base_url .. location
-    local response = self.http_client:post(url, request,
+    if attempt_num == 1 then
+        log.verbose('etcd transport | request: %s %s', url, encoded_request)
+    else
+        log.verbose('etcd transport | request (attempt %d): %s %s', attempt_num,
+            url, encoded_request)
+    end
+    local response = self.http_client:post(url, encoded_request,
         self.http_client_request_opts)
     log.verbose('etcd transport | response (%d): %s %s', response.status,
         location, response.body or '<no response body>')
@@ -188,12 +285,42 @@ local function request(self, location, request)
         local has_json_body = response.headers ~= nil and
             response.headers['content-type'] == 'application/json'
         if has_json_body then
-            error(etcd_error.new(json.decode(response.body)))
+            return false, etcd_error.new(json.decode(response.body))
         end
-        -- TODO: There is no test for this branch.
-        error(new_http_error(response))
+        return false, http_error_new(response)
     end
-    return json.decode(response.body)
+    return true, response.body
+end
+
+-- Retries the request in case of failure, when possible: see
+-- is_error_transient() for details.
+--
+-- Raise http client internal errors (OOM, unknown libcurl error).
+--
+-- Raise HttpError or EtcdError.
+local function request(self, location, request)
+    local encoded_request = json.encode(request)
+    local ok_acc
+    local result_acc
+    for attempt_num = 1, #self.endpoints do
+        local ok, result = request_current_node(self, location, encoded_request,
+            attempt_num)
+        -- TODO: Differentiate read only and write requests.
+        --
+        -- Now all requests are assumed as ones that may write.
+        if ok or not is_error_transient(result, false) then
+            ok_acc = ok
+            result_acc = result
+            break
+        end
+        ok_acc = ok
+        result_acc = choose_more_detailed_error(result_acc, result)
+        self.endpoint_idx = self.endpoint_idx % #self.endpoints + 1
+    end
+    if not ok_acc then
+        error(result_acc)
+    end
+    return json.decode(result_acc)
 end
 
 local mt = {

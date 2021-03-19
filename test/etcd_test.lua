@@ -1,5 +1,6 @@
 local fio = require('fio')
 local log = require('log')
+local json = require('json')
 local http_client_lib = require('http.client')
 local t = require('luatest')
 local Process = require('luatest.process')
@@ -734,3 +735,136 @@ g.test_extend_protocol = function()
 end
 
 -- }}} Extend client / protocol
+
+-- {{{ Failover
+
+g.test_failover = function()
+    -- Put a key-value.
+    local key = gen_key()
+    local value = gen_value()
+    g.client:put(key, value)
+
+    local function assert_response_timeout(ok, err)
+        -- ETCD error.
+        local exp_err_msg = 'etcdserver: request timed out'
+        local exp_err = {
+            code = 14,
+            message = exp_err_msg,
+            code_name = 'UNAVAILABLE',
+        }
+        t.assert_not(ok)
+        t.assert_equals(tostring(err), exp_err_msg)
+        t.assert_equals(err, exp_err)
+    end
+
+    local function assert_response_deadline(ok, err)
+        -- ETCD error.
+        local exp_err_msg = 'context deadline exceeded'
+        local exp_err = {
+            code = 2,
+            message = exp_err_msg,
+            code_name = 'UNKNOWN',
+        }
+        t.assert_not(ok)
+        t.assert_equals(tostring(err), exp_err_msg)
+        t.assert_equals(err, exp_err)
+    end
+
+    local function assert_response_network_failure(ok, err)
+        -- HTTP error.
+        local exp_err = {
+            response = {
+                status = 595,
+                reason = "Couldn't connect to server",
+            }
+        }
+        local exp_err_msg = json.encode(exp_err)
+        t.assert_not(ok)
+        t.assert_type(err, 'table')
+        t.assert_equals(tostring(err), exp_err_msg)
+        t.assert_equals('x' .. err, 'x' .. exp_err_msg)
+        t.assert_equals(err .. 'x', exp_err_msg .. 'x')
+        t.assert_equals(err, exp_err)
+    end
+
+    local function assert_quorum_ok()
+        -- Read is successful.
+        local response = g.client:range(key)
+        t.assert_equals(response.kvs[1].value, value)
+
+        -- Write is successful.
+        g.client:put(gen_key(), gen_value())
+    end
+
+    local function assert_replica_ok()
+        -- Serializable read is successful.
+        local response = g.client:range(key, nil, {serializable = true})
+        t.assert_equals(response.kvs[1].value, value)
+    end
+
+    local function assert_quorum_failure()
+        -- Read fails.
+        local ok, err = pcall(g.client.range, g.client, key)
+        assert_response_timeout(ok, err)
+
+        -- Write fails.
+        --
+        -- I don't know why the response to a write request
+        -- differs from the response to a read request on an
+        -- unhealthy cluster (when there is no quorum), so just
+        -- tested the actual behaviour I got on etcd 3.4.14.
+        local ok, err = pcall(g.client.put, g.client, gen_key(), gen_value())
+        assert_response_deadline(ok, err)
+    end
+
+    local function assert_network_failure()
+        -- Read fails.
+        local ok, err = pcall(g.client.range, g.client, key)
+        assert_response_network_failure(ok, err)
+
+        -- Write fails.
+        local ok, err = pcall(g.client.put, g.client, gen_key(), gen_value())
+        assert_response_network_failure(ok, err)
+    end
+
+    -- All nodes are alive.
+    assert_quorum_ok()
+
+    -- etcd-1 down, etcd-2 up, etcd-3 up.
+    stop_etcd_node(1)
+    assert_quorum_ok()
+
+    -- etcd-1 down, etcd-2 down, etcd-3 up (no quorum).
+    stop_etcd_node(2)
+    assert_replica_ok()
+    assert_quorum_failure()
+
+    -- etcd-1 down, etcd-2 down, etcd-3 down.
+    stop_etcd_node(3)
+    assert_network_failure()
+
+    -- etcd-1 down, etcd-2 bootstrapping (waiting quorum),
+    -- etcd-3 down.
+    start_etcd_node(2, {nowait = true})
+    assert_network_failure()
+
+    -- etcd-1 down, etcd-2 up (no quorum), etcd-3 down.
+    --
+    -- (Start etcd-1 to allow etcd-2 to bootstrap, but stop it
+    -- then.)
+    start_etcd_node(1, {nowait = true})
+    wait_etcd_node_started(1)
+    wait_etcd_node_started(2)
+    stop_etcd_node(1)
+    assert_replica_ok()
+    assert_quorum_failure()
+
+    -- Wake up all nodes back.
+    start_etcd_node(1)
+    start_etcd_node(3)
+
+    -- All nodes are alive.
+    assert_quorum_ok()
+end
+
+-- }}}

@@ -80,8 +80,16 @@ local function new(response)
     }, mt)
 end
 
+local function ack(obj)
+    if type(obj) == 'table' and getmetatable(obj) == mt then
+        return obj
+    end
+    return nil
+end
+
 return setmetatable(grpc_errors, {
     __index = {
         new = new,
+        ack = ack,
     }
 })
