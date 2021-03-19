@@ -33,6 +33,12 @@ local ALL = '\0'
 
 -- {{{ Module functions
 
+local supported_server_api_versions = {
+    ['v3'] = true,
+    ['v3beta'] = true,
+    ['v3alpha'] = true,
+}
+
 --- Module functions.
 --
 -- @section Functions
@@ -68,6 +74,21 @@ local ALL = '\0'
 --     etcd client options.
 -- @array[string] opts.endpoints
 --     Endpoint URLs.
+--
+--     TODO: Make it a separate first argument?
+-- @string[opt]  opts.server_api_version
+--     This option allows to choose the server API version:
+--
+--     - 'v3' (default, suitable for etcd v3.4+).
+--     - 'v3beta' (suitable for etcd v3.3 and v3.4)
+--     - 'v3alpha' (suitable for etcd v3.3 and before).
+--
+--     It is not determined automatically by the client at the
+--     moment (sorry for this!).
+--
+--     See etcd gRPC gateway [documentation][1] for details.
+--
+--     [1]: https://etcd.io/docs/current/dev-guide/api_grpc_gateway/
 -- @string[opt]  opts.user
 --     A user ID to authenticate with the server.
 -- @string[opt]  opts.password
@@ -90,10 +111,17 @@ local function new(opts)
     -- XXX: Handle user & password: give transport a callback
     -- to obtain authorization header.
 
+    local server_api_version = opts.server_api_version or 'v3'
+    if not supported_server_api_versions[server_api_version] then
+        error(('Unknown opts.server_api_version: %s'):format(
+            server_api_version))
+    end
+
     -- The protocol is stored to give a user ability to extend it
     -- with some definitions that are not supported by the client
     -- itself.
     return setmetatable({
+        server_api_version = server_api_version,
         protocol = protocol.new(),
         transport = transport.new({
             endpoints = opts.endpoints,
@@ -184,7 +212,9 @@ local function put(self, key, value, opts)
         key = key,
         value = value,
     }, opts))
-    local response = rawget(self, 'transport'):request('/v3/kv/put', request)
+    local server_api_version = rawget(self, 'server_api_version')
+    local location = ('/%s/kv/put'):format(server_api_version)
+    local response = rawget(self, 'transport'):request(location, request)
     return protocol:decode('PutResponse', response)
 end
 
@@ -309,7 +339,9 @@ local function range(self, key, range_end, opts)
         key = key,
         range_end = range_end,
     }, opts))
-    local response = rawget(self, 'transport'):request('/v3/kv/range', request)
+    local server_api_version = rawget(self, 'server_api_version')
+    local location = ('/%s/kv/range'):format(server_api_version)
+    local response = rawget(self, 'transport'):request(location, request)
     return protocol:decode('RangeResponse', response)
 end
 
@@ -364,8 +396,9 @@ local function deleterange(self, key, range_end, opts)
         key = key,
         range_end = range_end,
     }, opts))
-    local response = rawget(self, 'transport'):request('/v3/kv/deleterange',
-        request)
+    local server_api_version = rawget(self, 'server_api_version')
+    local location = ('/%s/kv/deleterange'):format(server_api_version)
+    local response = rawget(self, 'transport'):request(location, request)
     return protocol:decode('DeleteRangeResponse', response)
 end
 

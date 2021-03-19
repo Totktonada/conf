@@ -920,8 +920,9 @@ g.test_extend_protocol = function()
     mt.__index.status = function(self)
         local protocol = rawget(self, 'protocol')
         local request = protocol:encode('StatusRequest', {})
-        local response = rawget(self, 'transport'):request(
-            '/v3/maintenance/status', request)
+        local server_api_version = rawget(self, 'server_api_version')
+        local location = ('/%s/maintenance/status'):format(server_api_version)
+        local response = rawget(self, 'transport'):request(location, request)
         return protocol:decode('StatusResponse', response)
     end
     setmetatable(client, mt)
