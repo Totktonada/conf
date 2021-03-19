@@ -213,7 +213,7 @@ end
 --
 --     The special value `conf.driver.etcd.ALL` means no lower
 --     boundary.
--- @string range_end
+-- @string[opt] range_end
 --     Upper boundary of the range (exclusive).
 --
 --     The special value `conf.driver.etcd.NEXT` means to fetch
