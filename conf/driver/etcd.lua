@@ -313,10 +313,67 @@ local function range(self, key, range_end, opts)
     return protocol:decode('RangeResponse', response)
 end
 
+--- Delete the given range from the key-value storage.
+--
+-- Increments the revision of the key-value store. Generates
+-- a delete event in the event history for every deleted key.
+--
+-- The meaning of `key` and `range_end` arguments is exactly same
+-- as for corresponding @{instance.range} arguments.
+--
+-- @param self
+--     etcd driver instance.
+-- @string key
+--     The first key of the range to delete.
+--
+--     A string or `conf.driver.etcd.ALL`.
+-- @string[opt] range_end
+--     Upper boundary of the range to delete (exclusive).
+--
+--     A string, `conf.driver.etcd.NEXT`, `conf.driver.etcd.ALL`
+--     or a function (key -> range_end).
+-- @table[opt] opts
+--     Delete range request options.
+-- @boolean[opt] opts.prev_kv
+--     Whether to return deleted key-value pairs in the response.
+--
+-- @raise See 'General API notes'.
+--
+-- @return Response of the following structure:
+--
+-- ```
+-- {
+--     header = ResponseHeader,
+--     deleted = integer (number of deleted keys),
+--     prev_kvs = array of KeyValue (empty table when opts.prev_kv
+--         is false or omitted),
+-- }
+-- ```
+--
+-- @see ResponseHeader
+-- @see KeyValue
+--
+-- @function instance.deleterange
+local function deleterange(self, key, range_end, opts)
+    local protocol = rawget(self, 'protocol')
+    local opts = opts or {}
+    if type(range_end) == 'function' then
+        range_end = range_end(key)
+    end
+    local request = protocol:encode('DeleteRangeRequest', utils.merge_deep({
+        key = key,
+        range_end = range_end,
+    }, opts))
+    local response = rawget(self, 'transport'):request('/v3/kv/deleterange',
+        request)
+    return protocol:decode('DeleteRangeResponse', response)
+end
+
 mt = {
     __index = {
         put = put,
         range = range,
+        deleterange = deleterange,
         NEXT = NEXT,
         ALL = ALL,
     }

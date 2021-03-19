@@ -246,6 +246,11 @@ local function verify_kv(g, key, value)
     assert_range_response(response, {exp_kvs = exp_kvs})
 end
 
+local function verify_no_key(g, key)
+    local response = g.client:range(key)
+    assert_range_response(response, {exp_kvs = {}})
+end
+
 -- Return them sorted by keys.
 local function put_kvs(g, count)
     -- Get N sorted keys.
@@ -297,6 +302,75 @@ local function range_response_not_contains(response, kvs)
         local key = kv[1]
         t.assert_equals(res_kvs[key], nil)
     end
+end
+
+-- Usage:
+--
+-- 1. assert_deleterange_response(response)
+--
+-- * Verify response.header.
+-- * Verify that response.prev_kvs is an empty table: it is
+--   expected, when we don't pass {prev_kv = true} to the
+--   request.
+--
+-- 2. assert_deleterange_response(response, {deleted = X})
+--
+-- * Verify response.header.
+-- * Verify response.deleted.
+--
+-- 3. assert_deleterange_response(response, {prev_kvs = kvs})
+--
+-- * Verify response.header.
+-- * Verify response.deleted.
+-- * Verify response.prev_kvs (disregarding the order).
+--
+-- 4. assert_deleterange_response(response, {deleted = N,
+--        prev_kvs = kvs})
+--
+-- The same as case (3), but with explicit 'deleted' value.
+local function assert_deleterange_response(response, opts)
+    local function cmp_1(a, b)
+        return a[1] < b[1]
+    end
+
+    local opts = opts or {}
+    local exp_deleted = opts.deleted
+    local exp_prev_kvs = opts.prev_kvs
+
+    -- When both options are provided, they should be consistent.
+    if exp_deleted ~= nil and exp_prev_kvs ~= nil then
+        assert(exp_deleted == #exp_prev_kvs)
+    end
+
+    -- When only opts.prev_kvs is provided, opts.deleted is set to
+    -- #opts.prev_kvs.
+    if exp_deleted == nil and exp_prev_kvs ~= nil then
+        exp_deleted = #exp_prev_kvs
+    end
+
+    -- When opts.prev_kvs is omitted, verify that prev_kvs is
+    -- an empty table (default GRPC JSON value for an array).
+    if exp_prev_kvs == nil then
+        exp_prev_kvs = {}
+    end
+
+    -- Verify header.
+    assert_response_header(response.header)
+
+    -- Verify deleted.
+    if exp_deleted then
+        t.assert_equals(response.deleted, exp_deleted)
+    end
+
+    -- Verify prev_kv (disregarding the order).
+    t.assert_equals(#response.prev_kvs, #exp_prev_kvs)
+    local response_prev_kvs = {}
+    for i, kv in ipairs(response.prev_kvs) do
+        response_prev_kvs[i] = {kv.key, kv.value}
+    end
+    table.sort(response_prev_kvs, cmp_1)
+    table.sort(exp_prev_kvs, cmp_1)
+    t.assert_equals(response_prev_kvs, exp_prev_kvs)
 end
 
 -- }}} Helpers
@@ -686,6 +760,137 @@ end
 -- TODO: Verify min/max mod/create revisions.
 
 -- }}} range
+
+-- {{{ deleterange
+
+-- Those test cases are quite similar to the :range() test cases.
+
+-- Delete a single key.
+g.test_deleterange_one_key = function()
+    local key = gen_key()
+    g.client:put(key, gen_value())
+
+    local response = g.client:deleterange(key)
+    assert_deleterange_response(response, key, {deleted = 1})
+
+    verify_no_key(g, key)
+end
+
+-- Verify how {prev_kv = true} works.
+g.test_deleterange_prev_kv = function()
+    local key = gen_key()
+    local value = gen_value()
+    g.client:put(key, value)
+
+    local response = g.client:deleterange(key)
+    assert_deleterange_response(response, key, {
+        deleted = 1,
+        prev_kvs = {{key, value}},
+    })
+
+    verify_no_key(g, key)
+end
+
+-- Delete by a key prefix.
+g.test_deleterange_by_prefix = function()
+    local prefix_1 = gen_prefix()
+    local kvs = {
+        {prefix_1 .. gen_key(), gen_value()},
+        {prefix_1 .. gen_key(), gen_value()},
+        {prefix_1 .. gen_key(), gen_value()},
+    }
+    for _, kv in ipairs(kvs) do
+        g.client:put(kv[1], kv[2])
+    end
+
+    -- Put some value with other prefix. It must not be deleted.
+    local prefix_2 = gen_prefix()
+    t.assert_not(prefix_2:startswith(prefix_1))
+    local key_2 = prefix_2 .. gen_key()
+    local value_2 = gen_value()
+    g.client:put(key_2, value_2)
+
+    local response = g.client:deleterange(prefix_1, g.client.NEXT,
+        {prev_kv = true})
+    assert_deleterange_response(response, {prev_kvs = kvs})
+
+    -- Keys started with prefix_1 are deleted.
+    for _, kv in ipairs(kvs) do
+        verify_no_key(g, kv[1])
+    end
+
+    -- Keys started with prefix_2 are kept.
+    verify_kv(g, key_2, value_2)
+end
+
+-- Delete the [X; Y) range.
+g.test_deleterange_range = function()
+    local kvs = put_kvs(g, 4)
+    g.client:deleterange(kvs[2][1], kvs[4][1])
+    verify_kv(g, kvs[1][1], kvs[1][2])
+    verify_no_key(g, kvs[2][1])
+    verify_no_key(g, kvs[3][1])
+    verify_kv(g, kvs[4][1], kvs[4][2])
+end
+
+-- Delete the [X; +inf) range.
+g.test_deleterange_no_upper_bound = function()
+    local kvs = put_kvs(g, 6)
+    g.client:deleterange(kvs[4][1], g.client.ALL)
+    verify_kv(g, kvs[1][1], kvs[1][2])
+    verify_kv(g, kvs[2][1], kvs[2][2])
+    verify_kv(g, kvs[3][1], kvs[3][2])
+    verify_no_key(g, kvs[4][1])
+    verify_no_key(g, kvs[5][1])
+    verify_no_key(g, kvs[6][1])
+end
+
+-- Delete the (-inf; Y) range.
+g.test_deleterange_no_lower_bound = function()
+    local kvs = put_kvs(g, 6)
+    g.client:deleterange(g.client.ALL, kvs[4][1])
+    verify_no_key(g, kvs[1][1])
+    verify_no_key(g, kvs[2][1])
+    verify_no_key(g, kvs[3][1])
+    verify_kv(g, kvs[4][1], kvs[4][2])
+    verify_kv(g, kvs[5][1], kvs[5][2])
+    verify_kv(g, kvs[6][1], kvs[6][2])
+end
+
+-- Delete all keys.
+g.test_deleterange_all_keys = function()
+    local kvs = put_kvs(g, 6)
+    g.client:deleterange(g.client.ALL, g.client.ALL)
+    for i = 1, 6 do
+        verify_no_key(g, kvs[i][1])
+    end
+end
+
+-- Use a function for 'range_end' argument.
+g.test_deleterange_range_end_function = function()
+    -- The same as 'test_deleterange_range', but passes
+    -- 'range_end' as a function.
+    local kvs = put_kvs(g, 4)
+    g.client:deleterange(kvs[2][1], function(key)
+        assert(key == kvs[2][1])
+        return kvs[4][1]
+    end)
+    verify_kv(g, kvs[1][1], kvs[1][2])
+    verify_no_key(g, kvs[2][1])
+    verify_no_key(g, kvs[3][1])
+    verify_kv(g, kvs[4][1], kvs[4][2])
+end
+
+-- Delete a non-exist key.
+g.test_deleterange_nonexist_key = function()
+    local key = gen_key()
+    local response = g.client:deleterange(key, nil, {prev_kv = true})
+    t.assert_equals(response.deleted, 0)
+    t.assert_equals(response.prev_kvs, {})
+    verify_no_key(g, key)
+end
+
+-- }}} deleterange
 
 -- {{{ Extend client / protocol
 

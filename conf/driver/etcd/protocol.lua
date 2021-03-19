@@ -85,6 +85,22 @@ local function new()
 
     -- }}} Put request / response
 
+    -- {{{ DeleteRange request / response
+
+    protocol:add_message('DeleteRangeRequest', {
+        [1] = {'bytes', 'key'},
+        [2] = {'bytes', 'range_end'},
+        [3] = {'bool', 'prev_kv'},
+    })
+
+    protocol:add_message('DeleteRangeResponse', {
+        [1] = {'ResponseHeader', 'header'},
+        [2] = {'int64', 'deleted'},
+        [3] = {'repeated', 'KeyValue', 'prev_kvs'},
+    })
+
+    -- }}} DeleteRange request / response
+
     return protocol
 end
 
