@@ -133,7 +133,7 @@ end
 --     TODO: Consider dropping the ignore_value option from the
 --     API and provide this behavious, when value == nil is
 --     given. In Lua, unlike protobuf v3, we able to distinguish
---     nil and an enpty string.
+--     nil and an empty string.
 -- @table[opt] opts
 --     Put request options.
 -- @integer[opt] opts.lease
