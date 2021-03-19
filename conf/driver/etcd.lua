@@ -119,7 +119,7 @@ end
 --     etcd driver instance.
 -- @string key
 --     Key to put.
--- @string value
+-- @string[opt] value
 --     Value to associate with the key.
 --
 --     Use opts.ignore_value to leave the existing value
