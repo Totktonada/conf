@@ -6,6 +6,7 @@ local t = require('luatest')
 local Process = require('luatest.process')
 local etcd_utils = require('conf.driver.etcd.utils')
 local etcd_client_lib = require('conf.driver.etcd')
+local conf_lib = require('conf')
 
 local g = t.group()
 
@@ -1071,6 +1072,68 @@ g.test_failover = function()
 
     -- All nodes are alive.
     assert_quorum_ok()
+end
+
+-- }}}
+
+-- {{{ common api
+
+-- XXX: Move it outside of the etcd test.
+
+g.test_common_api = function()
+    local conf = conf_lib.new(g.etcd_client_urls, {
+        driver = 'etcd',
+    })
+
+    -- XXX: Use key / value generators or at least generated
+    -- prefix to make the test immutable for repeated / parallel
+    -- runs.
+
+    -- Scalar.
+    conf:set('foo', 42)
+    local res = conf:get('foo')
+    t.assert_equals(res.data, 42)
+
+    -- Delete scalar.
+    conf:del('foo')
+    local res = conf:get('foo')
+    t.assert_equals(res.data, nil)
+
+    -- Set nested scalar.
+    conf:set('foo.bar', 42)
+    local res = conf:get('foo.bar')
+    t.assert_equals(res.data, 42)
+    local res = conf:get('foo')
+    t.assert_equals(res.data, {bar = 42})
+
+    -- Set map.
+    conf:set('foo', {bar = {baz = 42}})
+    local res = conf:get('foo')
+    t.assert_equals(res.data, {bar = {baz = 42}})
+    local res = conf:get('foo.bar')
+    t.assert_equals(res.data, {baz = 42})
+    local res = conf:get('foo.bar.baz')
+    t.assert_equals(res.data, 42)
+
+    -- Set a field, delete a field.
+    conf:set('foo.x', 6)
+    conf:del('foo.bar')
+    local res = conf:get('foo')
+    t.assert_equals(res.data, {x = 6})
+
+    -- Set an array.
+    conf:set('foo', {'a', 'b', 'c'})
+    local res = conf:get('foo')
+    t.assert_equals(res.data, {'a', 'b', 'c'})
+    local res = conf:get('foo.1')
+    t.assert_equals(res.data, 'a')
+    local res = conf:get('foo.2')
+    t.assert_equals(res.data, 'b')
+    local res = conf:get('foo.3')
+    t.assert_equals(res.data, 'c')
+
+    -- Clean up.
+    conf:del('foo')
 end
 
 -- }}}
