@@ -1074,7 +1074,7 @@ g.test_failover = function()
     assert_quorum_ok()
 end
 
--- }}}
+-- }}} Failover
 
 -- {{{ common api
 
@@ -1136,4 +1136,4 @@ g.test_common_api = function()
     conf:del('foo')
 end
 
--- }}}
+-- }}} common api
