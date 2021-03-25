@@ -162,8 +162,7 @@ g.before_all(function()
     start_etcd_cluster()
 
     -- Create a client.
-    g.client = etcd_client_lib.new({
-        endpoints = g.etcd_client_urls,
+    g.client = etcd_client_lib.new(g.etcd_client_urls, {
         -- Uncomment for debugging.
         -- http_client = {request = {verbose = true}},
     })
@@ -896,9 +895,7 @@ end
 -- {{{ Extend client / protocol
 
 g.test_extend_protocol = function()
-    local client = etcd_client_lib.new({
-        endpoints = g.etcd_client_urls,
-    })
+    local client = etcd_client_lib.new(g.etcd_client_urls)
 
     -- Add a message to the protocol.
     local protocol = client.protocol
@@ -1137,3 +1134,36 @@ g.test_common_api = function()
 end
 
 -- }}} common api
+
+-- {{{ .new() parameters validation
+
+g.test_new_params_validation = function()
+    t.assert_error_msg_content_equals(
+        'endpoints is the mandatory parameter',
+        etcd_client_lib.new)
+    t.assert_error_msg_content_equals(
+        'endpoints parameter must be table, got string',
+        etcd_client_lib.new, g.etcd_client_urls[1])
+    t.assert_error_msg_content_equals(
+        'endpoints parameter must not be empty',
+        etcd_client_lib.new, {})
+end
+
+-- }}} .new() parameters validation
+
+-- {{{ common api: .new() parameters validation
+
+g.test_common_api_new_params_validation = function()
+    local opts = {driver = 'etcd'}
+    t.assert_error_msg_content_equals(
+        'endpoints is the mandatory parameter',
+        conf_lib.new, nil, opts)
+    t.assert_error_msg_content_equals(
+        'endpoints parameter must be table, got string',
+        conf_lib.new, g.etcd_client_urls[1], opts)
+    t.assert_error_msg_content_equals(
+        'endpoints parameter must not be empty',
+        conf_lib.new, {}, opts)
+end
+
+-- }}} common api: .new() parameters validation

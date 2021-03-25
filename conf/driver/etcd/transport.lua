@@ -331,10 +331,10 @@ local mt = {
 
 -- Parameters:
 --
--- opts.endpoints
+-- endpoints
 -- opts.http_client.new
 -- opts.http_client.request
-local function new(opts)
+local function new(endpoints, opts)
     -- Merge given options with default ones.
     local opts = opts or {}
     local http_client_opts = opts.http_client or {}
@@ -343,7 +343,17 @@ local function new(opts)
     local http_client_request_opts = utils.merge_deep(http_client_opts.request
         or {}, http_client_request_opts_default)
 
-    -- XXX: Forbid empty endpoints.
+    -- Verify the endpoints parameter.
+    if endpoints == nil then
+        error('endpoints is the mandatory parameter')
+    end
+    if type(endpoints) ~= 'table' then
+        error(('endpoints parameter must be table, got %s'):format(
+            type(endpoints)))
+    end
+    if endpoints[1] == nil then
+        error('endpoints parameter must not be empty')
+    end
 
     -- Create an HTTP client.
     local http_client = http_client_lib.new(http_client_new_opts)
@@ -352,7 +362,7 @@ local function new(opts)
 
     return setmetatable({
         endpoint_idx = 1,
-        endpoints = opts.endpoints,
+        endpoints = endpoints,
         http_client = http_client,
         http_client_request_opts = http_client_request_opts,
     }, mt)

@@ -70,12 +70,10 @@ local supported_server_api_versions = {
 -- [1]: https://etcd.io/docs/v3.4.0/op-guide/security/
 -- [2]: https://etcd.io/docs/v3.4.0/learning/design-auth-v3/
 --
+-- @array[string] endpoints
+--     Endpoint URLs.
 -- @table[opt]   opts
 --     etcd client options.
--- @array[string] opts.endpoints
---     Endpoint URLs.
---
---     TODO: Make it a separate first argument?
 -- @string[opt]  opts.server_api_version
 --     This option allows to choose the server API version:
 --
@@ -107,7 +105,9 @@ local supported_server_api_versions = {
 -- @return etcd client instance.
 --
 -- @function conf.driver.etcd.new
-local function new(opts)
+local function new(endpoints, opts)
+    local opts = opts or {}
+
     -- XXX: Handle user & password: give transport a callback
     -- to obtain authorization header.
 
@@ -123,8 +123,7 @@ local function new(opts)
     return setmetatable({
         server_api_version = server_api_version,
         protocol = protocol.new(),
-        transport = transport.new({
-            endpoints = opts.endpoints,
+        transport = transport.new(endpoints, {
             http_client = opts.http_client,
         }),
     }, mt)

@@ -2,7 +2,6 @@
 --
 -- @module conf
 
-local utils = require('conf.driver.etcd.utils')
 local etcd_driver = require('conf.driver.etcd')
 
 -- Forward declaration.
@@ -145,9 +144,7 @@ local function new(endpoints, opts)
     end
     -- XXX: Filter values.
     return setmetatable({
-        driver = etcd_driver.new(utils.merge_deep({
-            endpoints = endpoints,
-        }, opts)),
+        driver = etcd_driver.new(endpoints, opts),
     }, mt)
 end
 
