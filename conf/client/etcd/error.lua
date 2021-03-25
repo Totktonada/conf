@@ -39,7 +39,7 @@ mt = {
         elseif getmetatable(rhs) == mt then
             return lhs .. tostring(rhs)
         else
-            error('conf.driver.etcd.error.mt.__concat(): neither of args is ' ..
+            error('conf.client.etcd.error.mt.__concat(): neither of args is ' ..
                 'an etcd error')
         end
     end,

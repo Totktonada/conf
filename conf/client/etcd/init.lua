@@ -1,9 +1,9 @@
---- etcd driver.
--- @module conf.driver.etcd
+--- etcd client.
+-- @module conf.client.etcd
 
-local utils = require('conf.driver.etcd.utils')
-local protocol = require('conf.driver.etcd.protocol')
-local transport = require('conf.driver.etcd.transport')
+local utils = require('conf.client.etcd.utils')
+local protocol = require('conf.client.etcd.protocol')
+local transport = require('conf.client.etcd.transport')
 
 -- Forward declaration.
 local mt
@@ -104,7 +104,7 @@ local supported_server_api_versions = {
 --
 -- @return etcd client instance.
 --
--- @function conf.driver.etcd.new
+-- @function conf.client.etcd.new
 local function new(endpoints, opts)
     local opts = opts or {}
 
@@ -143,7 +143,7 @@ end
 -- the key-value store. Generates one event in the event history.
 --
 -- @param self
---     etcd driver instance.
+--     etcd client instance.
 -- @string key
 --     Key to put.
 -- @string[opt] value
@@ -235,20 +235,20 @@ end
 -- | ALL   | ALL       | all keys                   |
 --
 -- @param self
---     etcd driver instance.
+--     etcd client instance.
 -- @string key
 --     A key, a key prefix or a range start (depending of
 --     'range_end' value).
 --
---     The special value `conf.driver.etcd.ALL` means no lower
+--     The special value `conf.client.etcd.ALL` means no lower
 --     boundary.
 -- @string[opt] range_end
 --     Upper boundary of the range (exclusive).
 --
---     The special value `conf.driver.etcd.NEXT` means to fetch
+--     The special value `conf.client.etcd.NEXT` means to fetch
 --     all values prefixed with 'key'.
 --
---     The special value `conf.driver.etcd.ALL` means no upper
+--     The special value `conf.client.etcd.ALL` means no upper
 --     boundary.
 --
 --     A function (key -> range_end) may be passed here.
@@ -353,15 +353,15 @@ end
 -- as for corresponding @{instance.range} arguments.
 --
 -- @param self
---     etcd driver instance.
+--     etcd client instance.
 -- @string key
 --     The first key of the range to delete.
 --
---     A string or `conf.driver.etcd.ALL`.
+--     A string or `conf.client.etcd.ALL`.
 -- @string[opt] range_end
 --     Upper boundary of the range to delete (exclusive).
 --
---     A string, `conf.driver.etcd.NEXT`, `conf.driver.etcd.ALL`
+--     A string, `conf.client.etcd.NEXT`, `conf.client.etcd.ALL`
 --     or a function (key -> range_end).
 -- @table[opt] opts
 --     Delete range request options.
@@ -455,7 +455,7 @@ mt = {
 -- @integer    code
 --     GRPC error code.
 --
---     Those codes are listed in the `conf.driver.etcd.error`
+--     Those codes are listed in the `conf.client.etcd.error`
 --     module.
 -- @string     message
 --     What is going on wrong.
