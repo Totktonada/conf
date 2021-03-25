@@ -305,7 +305,7 @@ a:target + * {
 
 
 /* styles for prettification of source */
-pre .comment { color: #bbccaa; }
+pre .comment { color: #999999; }
 pre .constant { color: #a8660d; }
 pre .escape { color: #844631; }
 pre .keyword { color: #ffc090; font-weight: bold; }
