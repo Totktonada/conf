@@ -132,7 +132,7 @@ local supported_drivers = {
 --
 -- @section Functions
 
---- Create new configuration storage client instance.
+--- Create a new configuration storage client instance.
 --
 -- @array[string] endpoints
 --     Endpoint URLs.
