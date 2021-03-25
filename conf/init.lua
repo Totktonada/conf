@@ -85,6 +85,8 @@ local function unflatten(basepath, kvs)
             assert(obj == nil)
             -- TODO: There is no type information, so interpret
             -- any string that looks like a number as a number.
+            --
+            -- XXX: Use tonumber64().
             obj = tonumber(kv.value) or kv.value
         else
             assert(obj == nil or type(obj) == 'table')
@@ -109,6 +111,8 @@ local function unflatten(basepath, kvs)
             assert(cur_obj[component] == nil)
             -- TODO: Same here, no type information, so interpret
             -- a number like string as a number.
+            --
+            -- XXX: Use tonumber64().
             cur_obj[component] = tonumber(kv.value) or kv.value
         end
     end
@@ -183,7 +187,6 @@ end
 -- @function instance.set
 local function set(self, key, obj)
     -- XXX: Make it transactional.
-    -- XXX: Return a previous value?
     self.driver:deleterange(key)
     self.driver:deleterange(key .. '.', self.driver.NEXT)
     for _, kv in ipairs(flatten(key, obj)) do
@@ -198,7 +201,6 @@ end
 -- @function instance.del
 local function del(self, key)
     -- XXX: Make it transactional.
-    -- XXX: Return a previous value?
     self.driver:deleterange(key)
     self.driver:deleterange(key .. '.', self.driver.NEXT)
 end
