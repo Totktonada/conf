@@ -6,6 +6,10 @@ style = 'doc/ldoc/assets'
 no_lua_ref = true
 --no_summary = true
 
+-- Eliminate 'no module() call found; no initial doc comment'
+-- warnings.
+ignore = true
+
 tparam_alias('table', 'table')
 tparam_alias('integer', 'integer')
 tparam_alias('boolean', 'boolean')
