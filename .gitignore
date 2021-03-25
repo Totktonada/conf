@@ -3,3 +3,6 @@
 
 # Generated API documentation.
 doc/apidoc
+
+# Installed luarocks: ldoc, luacheck, luatest.
+.rocks

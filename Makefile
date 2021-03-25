@@ -11,6 +11,24 @@ WWW_BROWSER=$(shell \
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
 
+# Add .rocks/bin to PATH.
+#
+# Look for .rocks/bin directories upward starting from the project
+# directory.
+#
+# It is useful for luacheck and luatest.
+#
+# Note: The PROJECT_DIR holds a real path.
+define ENABLE_ROCKS_BIN
+	$(if $(wildcard $1/.rocks/bin),
+		$(eval PATH := $(PATH):$1/.rocks/bin)
+	)
+	$(if $1,
+		$(eval $(call ENABLE_ROCKS_BIN,$(patsubst %/,%,$(dir $1))))
+	)
+endef
+$(eval $(call ENABLE_ROCKS_BIN,$(PROJECT_DIR)))
+
 default:
 	false
 
@@ -36,7 +54,7 @@ serve-apidoc: apidoc
 
 .PHONY: lint
 lint:
-	cd $(PROJECT_DIR) && luacheck . -r --exclude-files third_party
+	cd $(PROJECT_DIR) && luacheck . -r --exclude-files third_party .rocks
 
 .PHONY: test
 test:
