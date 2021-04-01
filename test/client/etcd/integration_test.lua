@@ -1,165 +1,26 @@
-local fio = require('fio')
-local log = require('log')
 local json = require('json')
-local http_client_lib = require('http.client')
-local t = require('luatest')
-local Process = require('luatest.process')
 local etcd_utils = require('conf.client.etcd.utils')
 local etcd_client_lib = require('conf.client.etcd')
-local conf_lib = require('conf')
+local t = require('luatest')
+local test_utils = require('test.utils')
 
 local g = t.group()
 
--- {{{ Data generators
-
-local kv_next = 1
-
-local function gen_prefix()
-    local res = 'prefix_' .. tostring(kv_next) .. '.'
-    kv_next = kv_next + 1
-    return res
-end
-
-local function gen_key()
-    local res = 'key_' .. tostring(kv_next)
-    kv_next = kv_next + 1
-    return res
-end
-
-local function gen_value(opts)
-    local opts = opts or {}
-    local res = 'value_' .. tostring(kv_next)
-    if opts.size then
-        res = res .. '_'
-        for i = 1, opts.size - string.len(res) do
-            res = res .. string.char(i % 256)
-        end
-    end
-    kv_next = kv_next + 1
-    return res
-end
-
--- }}} Data generators
-
--- {{{ ETCD cluster management
-
-local function wait_etcd_node_started(node_id)
-    local server = g.etcd_servers[node_id]
-    assert(server.process ~= nil)
-    t.helpers.retrying({}, function()
-        log.verbose('etcd_test | waiting for etcd#%d startup', node_id)
-        local url = server.client_url .. '/v3/cluster/member/list'
-        local response = http_client_lib.post(url)
-        t.assert(response.status == 200, 'verify that etcd started')
-    end)
-end
-
--- Waits for starting unless opts.nowait is true.
-local function start_etcd_node(node_id, opts)
-    local opts = opts or {}
-
-    local server = g.etcd_servers[node_id]
-    assert(server.process == nil)
-    server.process = Process:start(unpack(server.start_args))
-    if not opts.nowait then
-        wait_etcd_node_started(node_id)
-    end
-end
-
--- Waits for stopping.
-local function stop_etcd_node(node_id)
-    local server = g.etcd_servers[node_id]
-    assert(server.process ~= nil)
-    server.process:kill()
-    t.helpers.retrying({}, function()
-        log.verbose('etcd_test | waiting for etcd#%d teardown', node_id)
-        t.assert_not(server.process:is_alive(), 'verify that etcd stopped')
-    end)
-    server.process = nil
-end
-
-local function start_etcd_cluster()
-    local client_urls = {
-        'http://localhost:2379',
-        'http://localhost:2381',
-        'http://localhost:2383',
-    }
-    local peer_urls = {
-        'http://localhost:2380',
-        'http://localhost:2382',
-        'http://localhost:2384',
-    }
-
-    local initial_cluster = table.concat({
-        ('test1=%s'):format(peer_urls[1]),
-        ('test2=%s'):format(peer_urls[2]),
-        ('test3=%s'):format(peer_urls[3]),
-    }, ',')
-
-    -- Initialize nodes parameters.
-    g.etcd_servers = {}
-    g.etcd_datadir_root = fio.tempdir()
-    for i = 1, #client_urls do
-        local name = ('test%d'):format(i)
-        local datadir = ('%s/%s'):format(g.etcd_datadir_root, name)
-        local env = {
-            ETCD_NAME = name,
-            ETCD_DATA_DIR = datadir,
-            ETCD_LISTEN_CLIENT_URLS = client_urls[i],
-            ETCD_ADVERTISE_CLIENT_URLS = client_urls[i],
-            -- Clustering.
-            ETCD_LISTEN_PEER_URLS = peer_urls[i],
-            ETCD_INITIAL_ADVERTISE_PEER_URLS = peer_urls[i],
-            ETCD_INITIAL_CLUSTER = initial_cluster,
-            ETCD_INITIAL_CLUSTER_STATE = 'new',
-        }
-        local start_args = {'/usr/bin/etcd', {}, env, {
-            output_prefix = ('etcd #%d'):format(i),
-        }}
-
-        g.etcd_servers[i] = {}
-        g.etcd_servers[i].client_url = client_urls[i]
-        g.etcd_servers[i].datadir = datadir
-        g.etcd_servers[i].start_args = start_args
-    end
-
-    -- Wake up nodes.
-    for i = 1, #client_urls do
-        start_etcd_node(i, {nowait = true})
-    end
-
-    -- Wait for starting.
-    for i = 1, #client_urls do
-        wait_etcd_node_started(i)
-    end
-
-    g.etcd_client_urls = client_urls
-end
-
-local function stop_etcd_cluster()
-    g.etcd_client_urls = nil
-    for i = 1, #g.etcd_servers do
-        stop_etcd_node(i)
-    end
-    fio.rmtree(g.etcd_datadir_root)
-    g.etcd_datadir_root = nil
-    g.etcd_servers = nil
-end
-
--- }}} ETCD cluster management
+-- Shortcuts.
+local gen_prefix = test_utils.gen_prefix
+local gen_key = test_utils.gen_key
+local gen_value = test_utils.gen_value
+local wait_etcd_node_started = test_utils.wait_etcd_node_started
+local start_etcd_node = test_utils.start_etcd_node
+local stop_etcd_node = test_utils.stop_etcd_node
+local before_all_default = test_utils.before_all_default
+local after_all_default = test_utils.after_all_default
 
 -- {{{ Setup / teardown
 
 g.before_all(function()
-    -- Show logs from the etcd transport.
-    --
-    -- Configuring of a logger without box.cfg() call is available
-    -- since tarantool-2.5.0-100-ga94a9b3fd.
-    if log.cfg then
-        log.cfg({level = 6})
-    end
-
-    start_etcd_cluster()
+    -- Setup storage.
+    before_all_default(g, {storage = 'etcd'})
 
     -- Create a client.
     g.client = etcd_client_lib.new(g.etcd_client_urls, {
@@ -169,7 +30,8 @@ g.before_all(function()
 end)
 
 g.after_all(function()
-    stop_etcd_cluster()
+    -- Teardown storage.
+    after_all_default(g)
 
     -- Drop the client.
     g.client = nil
@@ -1035,105 +897,43 @@ g.test_failover = function()
     assert_quorum_ok()
 
     -- etcd-1 down, etcd-2 up, etcd-3 up.
-    stop_etcd_node(1)
+    stop_etcd_node(g, 1)
     assert_quorum_ok()
 
     -- etcd-1 down, etcd-2 down, etcd-3 up (no quorum).
-    stop_etcd_node(2)
+    stop_etcd_node(g, 2)
     assert_replica_ok()
     assert_quorum_failure()
 
     -- etcd-1 down, etcd-2 down, etcd-3 down.
-    stop_etcd_node(3)
+    stop_etcd_node(g, 3)
     assert_network_failure()
 
     -- etcd-1 down, etcd-2 bootstrapping (waiting quorum),
     -- etcd-3 down.
-    start_etcd_node(2, {nowait = true})
+    start_etcd_node(g, 2, {nowait = true})
     assert_network_failure()
 
     -- etcd-1 down, etcd-2 up (no quorum), etcd-3 down.
     --
     -- (Start etcd-1 to allow etcd-2 to bootstrap, but stop it
     -- then.)
-    start_etcd_node(1, {nowait = true})
-    wait_etcd_node_started(1)
-    wait_etcd_node_started(2)
-    stop_etcd_node(1)
+    start_etcd_node(g, 1, {nowait = true})
+    wait_etcd_node_started(g, 1)
+    wait_etcd_node_started(g, 2)
+    stop_etcd_node(g, 1)
     assert_replica_ok()
     assert_quorum_failure()
 
     -- Wake up all nodes back.
-    start_etcd_node(1)
-    start_etcd_node(3)
+    start_etcd_node(g, 1)
+    start_etcd_node(g, 3)
 
     -- All nodes are alive.
     assert_quorum_ok()
 end
 
 -- }}} Failover
-
--- {{{ common api
-
--- XXX: Move it outside of the etcd test.
-
-g.test_common_api = function()
-    local conf = conf_lib.new(g.etcd_client_urls, {
-        driver = 'etcd',
-    })
-
-    -- XXX: Use key / value generators or at least generated
-    -- prefix to make the test immutable for repeated / parallel
-    -- runs.
-
-    -- Scalar.
-    conf:set('foo', 42)
-    local res = conf:get('foo')
-    t.assert_equals(res.data, 42)
-
-    -- Delete scalar.
-    conf:del('foo')
-    local res = conf:get('foo')
-    t.assert_equals(res.data, nil)
-
-    -- Set nested scalar.
-    conf:set('foo.bar', 42)
-    local res = conf:get('foo.bar')
-    t.assert_equals(res.data, 42)
-    local res = conf:get('foo')
-    t.assert_equals(res.data, {bar = 42})
-
-    -- Set map.
-    conf:set('foo', {bar = {baz = 42}})
-    local res = conf:get('foo')
-    t.assert_equals(res.data, {bar = {baz = 42}})
-    local res = conf:get('foo.bar')
-    t.assert_equals(res.data, {baz = 42})
-    local res = conf:get('foo.bar.baz')
-    t.assert_equals(res.data, 42)
-
-    -- Set a field, delete a field.
-    conf:set('foo.x', 6)
-    conf:del('foo.bar')
-    local res = conf:get('foo')
-    t.assert_equals(res.data, {x = 6})
-
-    -- Set an array.
-    conf:set('foo', {'a', 'b', 'c'})
-    local res = conf:get('foo')
-    t.assert_equals(res.data, {'a', 'b', 'c'})
-    local res = conf:get('foo.1')
-    t.assert_equals(res.data, 'a')
-    local res = conf:get('foo.2')
-    t.assert_equals(res.data, 'b')
-    local res = conf:get('foo.3')
-    t.assert_equals(res.data, 'c')
-
-    -- Clean up.
-    conf:del('foo')
-end
-
--- }}} common api
 
 -- {{{ .new() parameters validation
 
@@ -1150,20 +950,3 @@ g.test_new_params_validation = function()
 end
 
 -- }}} .new() parameters validation
-
--- {{{ common api: .new() parameters validation
-
-g.test_common_api_new_params_validation = function()
-    local opts = {driver = 'etcd'}
-    t.assert_error_msg_content_equals(
-        'endpoints is the mandatory parameter',
-        conf_lib.new, nil, opts)
-    t.assert_error_msg_content_equals(
-        'endpoints parameter must be table, got string',
-        conf_lib.new, g.etcd_client_urls[1], opts)
-    t.assert_error_msg_content_equals(
-        'endpoints parameter must not be empty',
-        conf_lib.new, {}, opts)
-end
-
--- }}} common api: .new() parameters validation
