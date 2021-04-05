@@ -5,6 +5,7 @@ local test_utils = require('test.utils')
 local g = t.group()
 
 -- Shortcuts.
+local gen_key = test_utils.gen_key
 local before_all_default = test_utils.before_all_default
 local after_all_default = test_utils.after_all_default
 
@@ -105,3 +106,40 @@ g.test_new_params_validation = function()
 end
 
 -- }}} .new() parameters validation
+
+-- {{{ Non-string scalars
+
+g.test_number = function()
+    local key = gen_key()
+
+    -- Positive value.
+    local value = 42
+    g.client:set(key, value)
+    local res = g.client:get(key)
+    t.assert_equals(res.data, value)
+
+    -- Negative value.
+    local value = -42
+    g.client:set(key, value)
+    local res = g.client:get(key)
+    t.assert_equals(res.data, value)
+end
+
+g.test_number64 = function()
+    local key = gen_key()
+
+    -- 2^64 - 1.
+    local value = 18446744073709551615ULL
+    g.client:set(key, value)
+    local res = g.client:get(key)
+    t.assert_equals(res.data, value)
+
+    -- A small value is returned as a usual number.
+    local exp_value = 42
+    local value = 42LL
+    g.client:set(key, value)
+    local res = g.client:get(key)
+    t.assert_equals(res.data, exp_value)
+end
+
+-- }}} Non-string scalars

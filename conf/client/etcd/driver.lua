@@ -23,11 +23,9 @@ local function decode_scalar(value)
     --
     -- XXX: Define unambiguous data layout.
     --
-    -- XXX: Use tonumber64().
-    --
     -- XXX: Interpret true / false as a boolean.
     assert(type(value) == 'string')
-    return tonumber(value) or value
+    return tonumber64(value) or value
 end
 
 local flatten_impl
