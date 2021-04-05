@@ -9,22 +9,44 @@ local mt
 
 -- {{{ Flatten / unflatten
 
+local function encode_scalar(obj)
+    -- TODO: Here we loss type information.
+    --
+    -- XXX: Strip LL / ULL from number64.
+    assert(type(obj) ~= 'table')
+    return tostring(obj)
+end
+
+local function decode_scalar(value)
+    -- There is no type information, so interpret any string that
+    -- looks like a number as a number.
+    --
+    -- XXX: Define unambiguous data layout.
+    --
+    -- XXX: Use tonumber64().
+    --
+    -- XXX: Interpret true / false as a boolean.
+    assert(type(value) == 'string')
+    return tonumber(value) or value
+end
+
 local flatten_impl
 flatten_impl = function(basepath, obj, kvs)
     -- Scalar.
     if type(obj) ~= 'table' then
-        -- TODO: Here we loss type information. Should we handle
-        -- it somehow?
         table.insert(kvs, {
             key = basepath,
-            value = tostring(obj),
+            value = encode_scalar(obj),
         })
         return
     end
 
     -- Array or map.
     for k, v in pairs(obj) do
-        -- XXX: Validate key: there should be no '.'.
+        -- XXX: Validate key:
+        --
+        -- * there should be no '.'
+        -- * forbid strings like '1'
         flatten_impl(('%s.%s'):format(basepath, tostring(k)), v, kvs)
     end
 end
@@ -83,11 +105,7 @@ local function unflatten(basepath, kvs)
         local abspath = kv.key
         if abspath == basepath then
             assert(obj == nil)
-            -- TODO: There is no type information, so interpret
-            -- any string that looks like a number as a number.
-            --
-            -- XXX: Use tonumber64().
-            obj = tonumber(kv.value) or kv.value
+            obj = decode_scalar(kv.value)
         else
             assert(obj == nil or type(obj) == 'table')
             if obj == nil then
@@ -109,11 +127,7 @@ local function unflatten(basepath, kvs)
             local component = relpath[#relpath]
             component = tonumber(component) or component
             assert(cur_obj[component] == nil)
-            -- TODO: Same here, no type information, so interpret
-            -- a number like string as a number.
-            --
-            -- XXX: Use tonumber64().
-            cur_obj[component] = tonumber(kv.value) or kv.value
+            cur_obj[component] = decode_scalar(kv.value)
         end
     end
 
