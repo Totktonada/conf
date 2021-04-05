@@ -22,9 +22,15 @@ local function decode_scalar(value)
     -- looks like a number as a number.
     --
     -- XXX: Define unambiguous data layout.
-    --
-    -- XXX: Interpret true / false as a boolean.
     assert(type(value) == 'string')
+
+    -- Booleans.
+    if value == 'false' then
+        return false
+    elseif value == 'true' then
+        return true
+    end
+
     return tonumber64(value) or value
 end
 

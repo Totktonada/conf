@@ -142,4 +142,18 @@ g.test_number64 = function()
     t.assert_equals(res.data, exp_value)
 end
 
+g.test_boolean = function()
+    local key = gen_key()
+
+    local value = false
+    g.client:set(key, value)
+    local res = g.client:get(key)
+    t.assert_equals(res.data, value)
+
+    local value = true
+    g.client:set(key, value)
+    local res = g.client:get(key)
+    t.assert_equals(res.data, value)
+end
+
 -- }}} Non-string scalars
