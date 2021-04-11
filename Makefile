@@ -1,3 +1,6 @@
+PREFIX?=/usr/local
+TARANTOOL_INSTALL_LUADIR?=$(DESTDIR)$(PREFIX)/share/tarantool
+
 WWW_BROWSER=$(shell \
 	{ type xdg-open >/dev/null 2>&1 && echo "xdg-open"; } || \
 	{ type open >/dev/null 2>&1 && echo "open"; } \
@@ -60,3 +63,17 @@ lint:
 .PHONY: test
 test:
 	cd $(PROJECT_DIR) && luatest -v
+
+.PHONY: install
+install:
+	install -d -m 755 $(TARANTOOL_INSTALL_LUADIR)/conf
+	install -m 644 $(PROJECT_DIR)/conf/*.lua \
+		$(TARANTOOL_INSTALL_LUADIR)/conf
+
+	install -d -m 755 $(TARANTOOL_INSTALL_LUADIR)/conf/client
+	install -m 644 $(PROJECT_DIR)/conf/client/*.lua \
+		$(TARANTOOL_INSTALL_LUADIR)/conf/client/
+
+	install -d -m 755 $(TARANTOOL_INSTALL_LUADIR)/conf/client/etcd
+	install -m 644 $(PROJECT_DIR)/conf/client/etcd/*.lua \
+		$(TARANTOOL_INSTALL_LUADIR)/conf/client/etcd/
