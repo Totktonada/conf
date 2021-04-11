@@ -2,6 +2,7 @@
 --
 -- A driver API is the same as conf.client API.
 
+local scalar_serializer = require('conf.client.etcd.scalar_serializer')
 local etcd_client = require('conf.client.etcd')
 
 -- Forward declaration.
@@ -9,38 +10,13 @@ local mt
 
 -- {{{ Flatten / unflatten
 
-local function encode_scalar(obj)
-    -- TODO: Here we loss type information.
-    --
-    -- XXX: Strip LL / ULL from number64.
-    assert(type(obj) ~= 'table')
-    return tostring(obj)
-end
-
-local function decode_scalar(value)
-    -- There is no type information, so interpret any string that
-    -- looks like a number as a number.
-    --
-    -- XXX: Define unambiguous data layout.
-    assert(type(value) == 'string')
-
-    -- Booleans.
-    if value == 'false' then
-        return false
-    elseif value == 'true' then
-        return true
-    end
-
-    return tonumber64(value) or value
-end
-
 local flatten_impl
 flatten_impl = function(basepath, obj, kvs)
     -- Scalar.
     if type(obj) ~= 'table' then
         table.insert(kvs, {
             key = basepath,
-            value = encode_scalar(obj),
+            value = scalar_serializer.encode(obj),
         })
         return
     end
@@ -109,7 +85,7 @@ local function unflatten(basepath, kvs)
         local abspath = kv.key
         if abspath == basepath then
             assert(obj == nil)
-            obj = decode_scalar(kv.value)
+            obj = scalar_serializer.decode(kv.value)
         else
             assert(obj == nil or type(obj) == 'table')
             if obj == nil then
@@ -131,7 +107,7 @@ local function unflatten(basepath, kvs)
             local component = relpath[#relpath]
             component = tonumber(component) or component
             assert(cur_obj[component] == nil)
-            cur_obj[component] = decode_scalar(kv.value)
+            cur_obj[component] = scalar_serializer.decode(kv.value)
         end
     end
 
