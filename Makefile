@@ -29,6 +29,7 @@ define ENABLE_ROCKS_BIN
 endef
 $(eval $(call ENABLE_ROCKS_BIN,$(PROJECT_DIR)))
 
+.PHONY: default
 default:
 	false
 
