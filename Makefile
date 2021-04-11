@@ -55,7 +55,7 @@ serve-apidoc: apidoc
 
 .PHONY: lint
 lint:
-	cd $(PROJECT_DIR) && luacheck . -r --exclude-files third_party .rocks
+	cd $(PROJECT_DIR) && luacheck . -r --exclude-files .rocks
 
 .PHONY: test
 test:
