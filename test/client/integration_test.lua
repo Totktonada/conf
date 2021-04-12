@@ -6,6 +6,7 @@ local g = t.group()
 
 -- Shortcuts.
 local gen_key = test_utils.gen_key
+local gen_value = test_utils.gen_value
 local before_all_default = test_utils.before_all_default
 local after_all_default = test_utils.after_all_default
 
@@ -157,3 +158,27 @@ g.test_boolean = function()
 end
 
 -- }}} Non-string scalars
+
+-- {{{ Holey array
+
+g.test_set_holey_array = function()
+    local key = gen_key()
+    local arr = {gen_value(), nil, gen_value()}
+    g.client:set(key, arr)
+
+    local res = g.client:get(key)
+    t.assert_equals(res.data, arr)
+end
+
+g.test_puncture_array = function()
+    local key = gen_key()
+    local arr = {gen_value(), gen_value(), gen_value()}
+    g.client:set(key, arr)
+
+    g.client:del((key .. '.2'))
+
+    local res = g.client:get(key)
+    t.assert_equals(res.data, {arr[1], nil, arr[3]})
+end
+
+-- }}} Holey array
