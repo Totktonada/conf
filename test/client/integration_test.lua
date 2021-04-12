@@ -182,3 +182,45 @@ g.test_puncture_array = function()
 end
 
 -- }}} Holey array
+
+-- {{{ Attempt to access a field of a scalar
+
+g.test_access_descendant_of_a_scalar = function()
+    local function check(ok, err, exp_err)
+        local err_msg = tostring(err):gsub('^.-:.-: ', '')
+        t.assert(not ok)
+        t.assert_equals(err_msg, exp_err)
+    end
+
+    -- Set a scalar.
+    local key = gen_key()
+    local value = gen_value()
+    g.client:set(key, value)
+
+    -- Get/set/del a scalar 'inside' an existing scalar.
+    local child_key = ('%s.%s'):format(key, gen_key())
+    local exp_err = ('Attempt to access a field / an item "%s" of a scalar ' ..
+        'value "%s"'):format(child_key, key)
+    local ok, err = pcall(g.client.get, g.client, child_key)
+    check(ok, err, exp_err)
+    local ok, err = pcall(g.client.set, g.client, child_key, gen_value())
+    check(ok, err, exp_err)
+    local ok, err = pcall(g.client.del, g.client, child_key)
+    check(ok, err, exp_err)
+
+    -- The following test cases fail now.
+    --[[
+    -- Get/set/del a scalar deeply 'inside' an existing scalar.
+    local descendant_key = ('%s.%s.%s'):format(key, gen_key(), gen_key())
+    local exp_err = ('Attempt to access a field / an item "%s" of a scalar ' ..
+        'value "%s"'):format(descendant_key, key)
+    local ok, err = pcall(g.client.get, g.client, descendant_key)
+    check(ok, err, exp_err)
+    local ok, err = pcall(g.client.set, g.client, descendant_key, gen_value())
+    check(ok, err, exp_err)
+    local ok, err = pcall(g.client.del, g.client, descandant_key)
+    check(ok, err, exp_err)
+    --]]
+end
+
+-- }}} Attempt to access a field of a scalar

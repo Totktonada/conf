@@ -8,6 +8,34 @@ local etcd_client = require('conf.client.etcd')
 -- Forward declaration.
 local mt
 
+-- {{{ Helpers
+
+-- Verify that a parent key does not hold a scalar.
+local function assert_parent_is_a_table(self, key)
+    if not key:find('%.') then
+        -- 'key' has no parent key, so nothing to check.
+        return
+    end
+
+    local client = rawget(self, 'client')
+    local parent_key = key:gsub('%.[^.]+$', '')
+    local response = client:range(parent_key)
+
+    -- Presence of a value means that it is a scalar.
+    --
+    -- Tables are not tracked explicitly now.
+    if response.count > 0 then
+        -- TODO: It would be more appropriate to raise an
+        -- error of a suitable type: a kind of Python's
+        -- TypeError. We raise a plain string error only
+        -- on arguments validation.
+        error(('Attempt to access a field / an item "%s" of a scalar ' ..
+            'value "%s"'):format(key, parent_key))
+    end
+end
+
+-- }}} Helpers
+
 -- {{{ Flatten / unflatten
 
 local flatten_impl
@@ -131,10 +159,15 @@ end
 local function get(self, key)
     -- XXX: Make it transactional.
     local client = rawget(self, 'client')
+    assert_parent_is_a_table(self, key)
     local response_point = client:range(key)
     local response_range = client:range(key .. '.', client.NEXT)
     if response_point.count > 0 and response_range.count > 0 then
-        error('XXX')
+        -- TODO: Raise an error of a suitable type: a kind of
+        -- Python's TypeError. We raise a plain string error only
+        -- on arguments validation.
+        error(('Data in the storage look corrupted: the key "%s" holds ' ..
+            'a scalar, however it has descendant keys'):format(key))
     end
     local response = response_point.count > 0 and response_point or
         response_range
@@ -147,6 +180,7 @@ end
 local function set(self, key, obj)
     -- XXX: Make it transactional.
     local client = rawget(self, 'client')
+    assert_parent_is_a_table(self, key)
     client:deleterange(key)
     client:deleterange(key .. '.', client.NEXT)
     for _, kv in ipairs(flatten(key, obj)) do
@@ -157,6 +191,7 @@ end
 local function del(self, key)
     -- XXX: Make it transactional.
     local client = rawget(self, 'client')
+    assert_parent_is_a_table(self, key)
     client:deleterange(key)
     client:deleterange(key .. '.', client.NEXT)
 end
