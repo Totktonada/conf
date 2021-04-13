@@ -53,6 +53,7 @@ g.test_basic_flow = function()
     t.assert_equals(res.data, nil)
 
     -- Set nested scalar.
+    g.client:set('foo', {})
     g.client:set('foo.bar', 42)
     local res = g.client:get('foo.bar')
     t.assert_equals(res.data, 42)
@@ -199,8 +200,8 @@ g.test_access_descendant_of_a_scalar = function()
 
     -- Get/set/del a scalar 'inside' an existing scalar.
     local child_key = ('%s.%s'):format(key, gen_key())
-    local exp_err = ('Attempt to access a field / an item "%s" of a scalar ' ..
-        'value "%s"'):format(child_key, key)
+    local exp_err = ('Attempt to access "%s", but "%s" is a scalar'):format(
+        child_key, key)
     local ok, err = pcall(g.client.get, g.client, child_key)
     check(ok, err, exp_err)
     local ok, err = pcall(g.client.set, g.client, child_key, gen_value())
@@ -208,19 +209,69 @@ g.test_access_descendant_of_a_scalar = function()
     local ok, err = pcall(g.client.del, g.client, child_key)
     check(ok, err, exp_err)
 
-    -- The following test cases fail now.
-    --[[
     -- Get/set/del a scalar deeply 'inside' an existing scalar.
+    --
+    -- Since there is no 'foo.bar' key, the 'no value' error is
+    -- reported at attempt to access 'foo.bar.baz'.
     local descendant_key = ('%s.%s.%s'):format(key, gen_key(), gen_key())
-    local exp_err = ('Attempt to access a field / an item "%s" of a scalar ' ..
-        'value "%s"'):format(descendant_key, key)
+    local exp_err = ('Attempt to access "%s", but there is no "%s"'):format(
+        descendant_key, descendant_key:gsub('%.[^.]+$', ''))
     local ok, err = pcall(g.client.get, g.client, descendant_key)
     check(ok, err, exp_err)
     local ok, err = pcall(g.client.set, g.client, descendant_key, gen_value())
     check(ok, err, exp_err)
-    local ok, err = pcall(g.client.del, g.client, descandant_key)
+    local ok, err = pcall(g.client.del, g.client, descendant_key)
     check(ok, err, exp_err)
-    --]]
 end
 
 -- }}} Attempt to access a field of a scalar
+
+-- {{{ Access a field / an item of a non-existing value
+
+g.test_index_non_existing_value = function()
+    local function check(ok, err, exp_err)
+        local err_msg = tostring(err):gsub('^.-:.-: ', '')
+        t.assert(not ok)
+        t.assert_equals(err_msg, exp_err)
+    end
+
+    local key_1 = gen_key()
+    local key_2 = gen_key()
+    local key = ('%s.%s'):format(key_1, key_2)
+    local exp_err = ('Attempt to access "%s.%s", but there is no "%s"'):format(
+        key_1, key_2, key_1)
+
+    local ok, err = pcall(g.client.get, g.client, key, gen_value())
+    check(ok, err, exp_err)
+    local ok, err = pcall(g.client.set, g.client, key, gen_value())
+    check(ok, err, exp_err)
+    local ok, err = pcall(g.client.del, g.client, key, gen_value())
+    check(ok, err, exp_err)
+end
+
+-- }}} Access a field / an item of a non-existing value
+
+-- {{{ Don't confuse an empty table with lack of a value
+
+g.test_marshalling_empty_table = function()
+    local key = gen_key()
+    g.client:set(key, {})
+
+    local res = g.client:get(key)
+    t.assert_equals(res.data, {})
+end
+
+g.test_remove_last_map_field = function()
+    local key_1 = gen_key()
+    local key_2 = gen_key()
+    local key_3 = gen_key()
+    local value = gen_value()
+
+    g.client:set(key_1, {[key_2] = {[key_3] = value}})
+    g.client:del(('%s.%s.%s'):format(key_1, key_2, key_3))
+
+    local res = g.client:get(key_1)
+    t.assert_equals(res.data, {[key_2] = {}})
+end
+
+-- }}} Don't confuse an empty table with lack of a value
