@@ -31,3 +31,21 @@ ATM. They may be important in some usage scenarious:
 * No way to coalesce several get/set/del operations into one transaction.
 
 The rough plan is to resolve most of such hot questions in Q2'21.
+
+## Installation
+
+```sh
+tarantoolctl rocks install conf
+```
+
+## Usage
+
+Consider the [API documentation][apidoc].
+
+[apidoc]: https://tarantool.github.io/conf/
+
+## License
+
+BSD 2 clause.
+
+See the LICENSE file.
