@@ -89,8 +89,12 @@ local supported_server_api_versions = {
 --     [1]: https://etcd.io/docs/current/dev-guide/api_grpc_gateway/
 -- @string[opt]   opts.user
 --     A user ID to authenticate with the server.
+--
+--     XXX: Not supported ATM.
 -- @string[opt]   opts.password
 --     A password to authenticate with given User ID.
+--
+--     XXX: Not supported ATM.
 -- @table[opt]    opts.http_client
 --     HTTP client options.
 -- @table[opt]    opts.http_client.new
