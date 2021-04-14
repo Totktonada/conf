@@ -1,0 +1,417 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>conf API reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>conf</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Module_functions">Module functions </a></li>
+<li><a href="#Instance_methods">Instance methods </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/conf.client.etcd.html">conf.client.etcd</a></li>
+  <li><a href="../modules/conf.client.etcd.transport.html">conf.client.etcd.transport</a></li>
+  <li><strong>conf</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>conf</code></h1>
+<p>Configuration storage client.</p>
+<p><table class="markdown_table">
+</table>
+</p>
+
+
+<h2><a href="#Module_functions">Module functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (opts)</a></td>
+	<td class="summary">Create a new configuration storage client instance.</td>
+	</tr>
+</table>
+<h2><a href="#Instance_methods">Instance methods </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#instance.get">instance.get (self, key)</a></td>
+	<td class="summary">Fetch a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#instance.set">instance.set (self, key, obj)</a></td>
+	<td class="summary">Store a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#instance.del">instance.del (self, key)</a></td>
+	<td class="summary">Delete a value.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Module_functions"></a>Module functions </h2>
+
+    <dl class="function Functions">
+    <dt>
+    <a name="new"></a>
+    <strong>new (opts)</strong>
+    </dt>
+    <dd>
+    <p>Create a new configuration storage client instance. <table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opts</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>)
+            </span>
+
+        <br>
+        <span class="parameter-description">
+        <p>
+     Client options.
+<p>     May contain driver specific options (listed in
+     <a href="../modules/conf.client.etcd.html#conf.client.etcd.new">conf.client.etcd.new</a>).</p>
+        </span>
+        <ul>
+        <li><span class="parameter">driver</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Driver name. Only 'etcd' is supported now.
+<p>     It is the mandatory option.</p>
+        </span>
+        </li>
+        <li><span class="parameter">endpoints</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">{string, ...}</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Endpoint URLs.
+</p>
+        </span>
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        client instance.
+    </ol>
+
+    <h3>Raises:</h3>
+     See 'General API notes' in the <a href="../modules/conf.client.etcd.html#">etcd
+ client documentation</a>.
+<p> XXX: Move the General API notes (at least errors) outside of
+ the etcd client documentation.
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> conf_lib = <span class="global">require</span>(<span class="string">'conf'</span>)
+
+<span class="keyword">local</span> urls = {
+    <span class="string">'http://localhost:2379'</span>,
+    <span class="string">'http://localhost:2381'</span>,
+    <span class="string">'http://localhost:2383'</span>,
+}
+<span class="keyword">local</span> conf = conf.new({driver = <span class="string">'etcd'</span>, endpoints = urls})</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Instance_methods"></a>Instance methods </h2>
+
+    <dl class="function Methods">
+    <dt>
+    <a name="instance.get"></a>
+    <strong>instance.get (self, key)</strong>
+    </dt>
+    <dd>
+    <p>Fetch a value. <table class="markdown_table">
+</table>
+<p>
+ Note: A string value that can be interpreted as a number will
+ be converted to a number. It is constraint of current
+ implementation and will be resolved in a future.
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Client instance.</p>
+        </span>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A key to fetch.
+<p>     A dot notation may be used to access a nested map field or
+     array element: <code>'foo.bar'</code> or <code>'foo.1'</code>. Array indices are
+     1-based, just as in Lua.
+<p>     <span class="xxx">XXX</span>: Describe the dot notition is the separate section
+     (like 'General API notes').
+</p>
+        </span>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Response of the following structure:
+<p><pre> {
+     data = obj,
+ }</pre>
+<p>
+ <code>obj</code> is the value associated with given key or <code>nil</code> if given
+ key does not exist.
+
+    </ol>
+
+    <h3>Raises:</h3>
+     See 'General API notes' in the <a href="../modules/conf.client.etcd.html#">etcd
+ client documentation</a>.
+<p> XXX: Move the General API notes (at least errors) outside of
+ the etcd client documentation.
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- Put a map.
+</span>conf:set(<span class="string">'foo'</span>, {bar = {baz = <span class="number">42</span>}})
+
+<span class="comment">-- Fetch it back.
+</span><span class="keyword">local</span> res = conf:get(<span class="string">'foo'</span>)
+<span class="comment">-- res.data is {bar = {baz = 42}}
+</span>
+<span class="comment">-- Or fetch a field.
+</span><span class="keyword">local</span> res = conf:get(<span class="string">'foo.bar'</span>)
+<span class="comment">-- res.data is {baz = 42}
+</span><span class="keyword">local</span> res = conf:get(<span class="string">'foo.bar.baz'</span>)
+<span class="comment">-- res.data is 42
+</span>
+<span class="comment">-- Put an array.
+</span>conf:set(<span class="string">'foo'</span>, {<span class="string">'a'</span>, <span class="string">'b'</span>, <span class="string">'c'</span>})
+
+<span class="comment">-- Fetch an array element.
+</span><span class="keyword">local</span> res = conf:get(<span class="string">'foo.1'</span>)
+<span class="comment">-- res.data is 'a'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name="instance.set"></a>
+    <strong>instance.set (self, key, obj)</strong>
+    </dt>
+    <dd>
+    <p>Store a value. <table class="markdown_table">
+</table>
+<p>
+ If given key contains a value, the value is **replaced** with
+ the new one. Maps are NOT merged.
+<p> Use dot notation to set a particular field of a map (or
+ particular element of an array).
+<p> Storing of <code>foo.bar.baz</code> means that <code>foo</code> and <code>foo.bar</code> will
+ store a map. The same for <code>foo.1</code>: <code>foo</code> will store an array.
+<p> <span class="xxx">XXX</span>: Define behaviour for corner cases like storing <code>foo.bar</code>,
+ when <code>foo</code> exists and it is not a map.
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Client instance.</p>
+        </span>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A key to set.
+<p>     A dot notation may be used, see <a href="../modules/conf.html#instance.get">conf.get</a>.</p>
+        </span>
+        </li>
+        <li><span class="parameter">obj</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A value to store.
+<p>     Allowed types: <code>string</code>, <code>number</code>, <code>table</code> (a map or an
+     array).
+</p>
+        </span>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Nothing.
+<p> It is recommended to don't lean on the fact that the method
+ does not return anything, because the API can be extended with
+ a return value in a future.
+
+    </ol>
+
+    <h3>Raises:</h3>
+     See 'General API notes' in the <a href="../modules/conf.client.etcd.html#">etcd
+ client documentation</a>.
+<p> XXX: Move the General API notes (at least errors) outside of
+ the etcd client documentation.
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- Store a scalar, a map and an array.
+</span>conf:set(<span class="string">'foo'</span>, <span class="string">'hello'</span>)
+conf:set(<span class="string">'moo'</span>, {bar = {baz = <span class="number">42</span>}})
+conf:set(<span class="string">'xoo'</span>, {<span class="string">'a'</span>, <span class="string">'b'</span>, <span class="string">'c'</span>})
+
+<span class="comment">-- Set a nested field and an array element.
+</span>conf:set(<span class="string">'foo.bar.baz'</span>, <span class="string">'hello'</span>)
+conf:set(<span class="string">'foo.1'</span>, <span class="string">'hello'</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name="instance.del"></a>
+    <strong>instance.del (self, key)</strong>
+    </dt>
+    <dd>
+    <p>Delete a value. <table class="markdown_table">
+</table>
+<p>
+ <span class="xxx">XXX</span>: Define behaviour for tricky cases like removing an array
+ element in a middle of the array.
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Client instance.</p>
+        </span>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A key to delete.
+<p>     A dot notation may be used, see <a href="../modules/conf.html#instance.get">conf.get</a>.
+</p>
+        </span>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Nothing.
+<p> It is recommended to don't lean on the fact that the method
+ does not return anything, because the API can be extended with
+ a return value in a future.
+
+    </ol>
+
+    <h3>Raises:</h3>
+     See 'General API notes' in the <a href="../modules/conf.client.etcd.html#">etcd
+ client documentation</a>.
+<p> XXX: Move the General API notes (at least errors) outside of
+ the etcd client documentation.
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- Store a map and delete it then.
+</span>conf:set(<span class="string">'foo'</span>, {bar = {baz = <span class="number">42</span>}})
+conf:del(<span class="string">'foo'</span>)
+
+<span class="comment">-- Or delete just one field.
+</span>conf:set(<span class="string">'foo'</span>, {bar = {baz = <span class="number">42</span>}})
+conf:del(<span class="string">'foo.bar.baz'</span>)
+
+<span class="comment">-- Or delete an array element.
+</span>conf:set(<span class="string">'foo'</span>, {<span class="string">'a'</span>, <span class="string">'b'</span>, <span class="string">'c'</span>})
+conf:del(<span class="string">'foo.3'</span>)</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+</div> <!-- id="container" -->
+</body>
+</html>

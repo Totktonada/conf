@@ -1,0 +1,1125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>conf API reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>conf</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Module_functions">Module functions </a></li>
+<li><a href="#Instance_methods">Instance methods </a></li>
+<li><a href="#General_API_notes">General API notes </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>conf.client.etcd</strong></li>
+  <li><a href="../modules/conf.client.etcd.transport.html">conf.client.etcd.transport</a></li>
+  <li><a href="../modules/conf.html">conf</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>conf.client.etcd</code></h1>
+<p>etcd client.</p>
+<p><table class="markdown_table">
+</table>
+</p>
+
+
+<h2><a href="#Module_functions">Module functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#conf.client.etcd.new">conf.client.etcd.new (opts)</a></td>
+	<td class="summary">Create a new etcd client instance.</td>
+	</tr>
+</table>
+<h2><a href="#Instance_methods">Instance methods </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#instance.put">instance.put (self, key[, value[, opts]])</a></td>
+	<td class="summary">Put the given key into the key-value storage.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#instance.range">instance.range (self, key[, range_end], opts)</a></td>
+	<td class="summary">Fetch a range of keys and its values.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#instance.deleterange">instance.deleterange (self, key[, range_end[, opts]])</a></td>
+	<td class="summary">Delete the given range from the key-value storage.</td>
+	</tr>
+</table>
+<h2><a href="#General_API_notes">General API notes </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#EtcdError">EtcdError</a></td>
+	<td class="summary">EtcdError</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#HttpError">HttpError</a></td>
+	<td class="summary">HttpError</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ResponseHeader">ResponseHeader</a></td>
+	<td class="summary">ResponseHeader</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#KeyValue">KeyValue</a></td>
+	<td class="summary">KeyValue</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Module_functions"></a>Module functions </h2>
+
+    <dl class="function Functions">
+    <dt>
+    <a name="conf.client.etcd.new"></a>
+    <strong>conf.client.etcd.new (opts)</strong>
+    </dt>
+    <dd>
+    <p>Create a new etcd client instance. <table class="markdown_table">
+</table>
+<p>
+ If etcd is <a href="https://etcd.io/docs/v3.4.0/op-guide/security/">started</a> with <code>--auto-tls</code> (or there is other
+ reason to don't verify server's identity on the client), set
+ the <code>opts.http_client.request.verify_peer</code> option to <code>false</code>.
+ It corresponds to the <code>--insecure</code> (<code>-k</code>) curl option.
+<p> If the etcd server is <a href="https://etcd.io/docs/v3.4.0/op-guide/security/">secured</a> by enforcement of clients to
+ use a client certificate, use <code>opts.http_client.request.ssl_key</code>
+ and <code>opts.http_client.request.ssl_cert</code> options. They
+ correspond to the <code>--key</code> and <code>--cert</code> curl options.
+<p> <span class="xxx">XXX</span>: Add those options to the root level?
+<p> Please, note that this etcd client cannot use TLS Common Name
+ to authenticate with the server, because the gRPC to JSON
+ gateway does not support it.
+<p> If the <a href="https://etcd.io/docs/v3.4.0/learning/design-auth-v3/">authentication</a> is enabled on the etcd server,
+ provide <code>opts.user</code> and <code>opts.password</code> options.
+<p> etcd may be configured to don't require neither client side
+ key & certificate, nor user ID & password.
+<p><table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opts</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>)
+            </span>
+
+        <br>
+        <span class="parameter-description">
+        <p>
+     etcd client options.</p>
+        </span>
+        <ul>
+        <li><span class="parameter">endpoints</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">{string, ...}</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Endpoint URLs.</p>
+        </span>
+        </li>
+        <li><span class="parameter">server_api_version</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     This option allows to choose the server API version:
+<p><ul class="markdown_list">
+<li>'v3' (default, suitable for etcd v3.4+).</li>
+<li>'v3beta' (suitable for etcd v3.3 and v3.4)</li>
+<li>'v3alpha' (suitable for etcd v3.3 and before).</li>
+</ul>
+<p>     It is not determined automatically by the client at the
+     moment (sorry for this!).
+<p>     See etcd gRPC gateway <a href="https://etcd.io/docs/current/dev-guide/api_grpc_gateway/">documentation</a> for details.
+</p>
+        </span>
+        </li>
+        <li><span class="parameter">user</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A user ID to authenticate with the server.
+<p>     <span class="xxx">XXX</span>: Not supported ATM.</p>
+        </span>
+        </li>
+        <li><span class="parameter">password</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A password to authenticate with given User ID.
+<p>     <span class="xxx">XXX</span>: Not supported ATM.</p>
+        </span>
+        </li>
+        <li><span class="parameter">http_client</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     HTTP client options.</p>
+        </span>
+        </li>
+        <li><span class="parameter">http_client.new</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     <a href="../modules/conf.client.etcd.transport.html#http_client_new_opts">HTTP client instance
+     options</a>.</p>
+        </span>
+        </li>
+        <li><span class="parameter">http_client.request</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     <a href="../modules/conf.client.etcd.transport.html#http_client_request_opts">HTTP client
+     request options</a>.
+</p>
+        </span>
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        etcd client instance.
+    </ol>
+
+    <h3>Raises:</h3>
+    See 'General API notes'.
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Instance_methods"></a>Instance methods </h2>
+
+    <dl class="function Methods">
+    <dt>
+    <a name="instance.put"></a>
+    <strong>instance.put (self, key[, value[, opts]])</strong>
+    </dt>
+    <dd>
+    <p>Put the given key into the key-value storage. <table class="markdown_table">
+</table>
+<p>
+ Creates a key if it does not exist. Increments a revision of
+ the key-value store. Generates one event in the event history.
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     etcd client instance.</p>
+        </span>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Key to put.</p>
+        </span>
+        </li>
+        <li><span class="parameter">value</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Value to associate with the key.
+<p>     Use opts.ignore_value to leave the existing value
+     unchanged.
+<p>     Technically it is possible to omit the value without the
+     opts.ignore_value option, however the result may be
+     misleading. The default string value (an empty string)
+     will be associated with the key.
+<p>     TODO: Consider dropping the ignore_value option from the
+     API and provide this behavious, when value == nil is
+     given. In Lua, unlike protobuf v3, we able to distinguish
+     nil and an empty string.</p>
+        </span>
+        </li>
+        <li><span class="parameter">opts</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+
+        <br>
+        <span class="parameter-description">
+        <p>
+     Put request options.</p>
+        </span>
+        <ul>
+        <li><span class="parameter">lease</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Lease ID to associate with the key. Zero indicates no
+     lease.
+<p>     TODO: When omitted -- use current lease or drops the lease
+     on the key? Test it and update the doc.
+<p>     TODO: Describe how to obtain a lease ID.
+<p>     Note: Use 'ignore_lease' to reuse currently existing lease.</p>
+        </span>
+        </li>
+        <li><span class="parameter">prev_kv</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Whether to return the previous key-value pair in the
+     response.</p>
+        </span>
+        </li>
+        <li><span class="parameter">ignore_value</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Update the key using the **existing** value: so 'value'
+     remains the same, but 'mod_revision' and 'version' are
+     updated.
+<p>     Returns the INVALID_ARGUMENT error if the key does not
+     exist.</p>
+        </span>
+        </li>
+        <li><span class="parameter">ignore_lease</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Update the key using the **existing** lease.
+<p>     Returns the INVALID_ARGUMENT error if the key does not
+     exist.
+</p>
+        </span>
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Response of the following structure:
+<p><pre> {
+     header = ResponseHeader,
+     prev_kv = KeyValue (if prev_kv is set),
+ }</pre>
+
+    </ol>
+
+    <h3>Raises:</h3>
+    See 'General API notes'.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/conf.client.etcd.html#ResponseHeader">ResponseHeader</a></li>
+         <li><a href="../modules/conf.client.etcd.html#KeyValue">KeyValue</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name="instance.range"></a>
+    <strong>instance.range (self, key[, range_end], opts)</strong>
+    </dt>
+    <dd>
+    <p>Fetch a range of keys and its values. <table class="markdown_table">
+</table>
+<p>
+ This methods allows to fetch key-value pairs by a key,
+ a prefix of a key, a range of keys.
+<p> The following table summarizes different ways to indicate
+ a range of keys.
+<p><table class="markdown_table">
+<tr>
+<th>key</th>
+<th>range_end</th>
+<th>effect</th>
+</tr>
+<tr>
+</tr>
+<tr>
+<td>'foo'</td>
+<td>nil</td>
+<td>keys exactly matched 'foo'</td>
+</tr>
+<tr>
+<td>'foo'</td>
+<td>'zoo'</td>
+<td>keys in ['foo', 'zoo')</td>
+</tr>
+<tr>
+<td>'foo'</td>
+<td>NEXT</td>
+<td>keys prefixed with 'foo'</td>
+</tr>
+<tr>
+<td>'foo'</td>
+<td>ALL</td>
+<td>keys >= 'foo'</td>
+</tr>
+<tr>
+<td>ALL</td>
+<td>'foo'</td>
+<td>keys < 'foo'</td>
+</tr>
+<tr>
+<td>ALL</td>
+<td>ALL</td>
+<td>all keys</td>
+</tr>
+</table>
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     etcd client instance.</p>
+        </span>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A key, a key prefix or a range start (depending of
+     'range_end' value).
+<p>     The special value <code>conf.client.etcd.ALL</code> means no lower
+     boundary.</p>
+        </span>
+        </li>
+        <li><span class="parameter">range_end</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Upper boundary of the range (exclusive).
+<p>     The special value <code>conf.client.etcd.NEXT</code> means to fetch
+     all values prefixed with 'key'.
+<p>     The special value <code>conf.client.etcd.ALL</code> means no upper
+     boundary.
+<p>     A function (key -> range_end) may be passed here.</p>
+        </span>
+        </li>
+        <li><span class="parameter">opts</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+
+        <br>
+        <span class="parameter-description">
+        <p>
+     Range request options.</p>
+        </span>
+        <ul>
+        <li><span class="parameter">limit</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Limit number of returned keys. Zero means no limit.</p>
+        </span>
+        </li>
+        <li><span class="parameter">revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Revision (a kind of point-in-time) to use for the request.
+     Negative or zero value means using of the newest revision.
+<p>     Note: The response header always contains the newest
+     revision. The option affects returned key-values.
+<p>     Returns the OUT_OF_RANGE error if the revision is compacted.</p>
+        </span>
+        </li>
+        <li><span class="parameter">sort_order</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Order for returned result:
+<p><ul class="markdown_list">
+<li>'NONE' (default, no sorting),</li>
+<li>'ASCEND' (lowest target value first),</li>
+<li>'DESCEND' (highest target value first).</li>
+</ul></p>
+        </span>
+        </li>
+        <li><span class="parameter">sort_target</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     KeyValue field to use for sorting: 'KEY' (default), 'VERSION',
+     'CREATE', 'MOD', 'VALUE'.</p>
+        </span>
+        </li>
+        <li><span class="parameter">serializable</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Use serializable member-local reads.
+<p>     Range requests are linearizable by default; linearizable
+     requests have higher latency and lower throughput than
+     serializable requests but reflect the current consensus of
+     the cluster.
+<p>     For better performance, in exchange for possible stale
+     reads, a serializable range request is served locally
+     without needing to reach consensus with other nodes in the
+     cluster.</p>
+        </span>
+        </li>
+        <li><span class="parameter">keys_only</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Return only keys, not values.
+<p>     Since all omitted fields are set to default values (which
+     are defined by protobuf v3), all fetched values will appear
+     as empty strings in the response.</p>
+        </span>
+        </li>
+        <li><span class="parameter">count_only</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Return only the keys count in the range, but not key-values
+     itself (so, <code>response.kvs</code> will be an empty table).
+<p>     <code>response.count</code> is set always, disregarding of the
+     <code>opts.count_only</code> value in the request.</p>
+        </span>
+        </li>
+        <li><span class="parameter">min_mod_revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Filter out keys with <code>mod_revision</code> lesser than given
+     revision.</p>
+        </span>
+        </li>
+        <li><span class="parameter">max_mod_revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Filter out keys with <code>mod_revision</code> greater than given
+     revision.</p>
+        </span>
+        </li>
+        <li><span class="parameter">min_create_revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Filter out keys with <code>create_revision</code> lesser than given
+     revision.</p>
+        </span>
+        </li>
+        <li><span class="parameter">max_create_resivion</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Filter out keys with <code>create_revision</code> greater than given
+     revision.
+</p>
+        </span>
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Response of the following structure:
+<p><pre> {
+     header = ResponseHeader,
+     kvs = array of KeyValue (empty table when opts.count_only is true),
+     more = boolean (if there are more keys to return in the
+         requested range),
+     count = integer,
+ }</pre>
+
+    </ol>
+
+    <h3>Raises:</h3>
+    See 'General API notes'.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/conf.client.etcd.html#ResponseHeader">ResponseHeader</a></li>
+         <li><a href="../modules/conf.client.etcd.html#KeyValue">KeyValue</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name="instance.deleterange"></a>
+    <strong>instance.deleterange (self, key[, range_end[, opts]])</strong>
+    </dt>
+    <dd>
+    <p>Delete the given range from the key-value storage. <table class="markdown_table">
+</table>
+<p>
+ Increments the revision of the key-value store. Generates
+ a delete event in the event history for every deleted key.
+<p> The meaning of <code>key</code> and <code>range_end</code> arguments is exactly same
+ as for corresponding <a href="../modules/conf.client.etcd.html#instance.range">instance.range</a> arguments.
+</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     etcd client instance.</p>
+        </span>
+        </li>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     The first key of the range to delete.
+<p>     A string or <code>conf.client.etcd.ALL</code>.</p>
+        </span>
+        </li>
+        <li><span class="parameter">range_end</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Upper boundary of the range to delete (exclusive).
+<p>     A string, <code>conf.client.etcd.NEXT</code>, <code>conf.client.etcd.ALL</code>
+     or a function (key -> range_end).</p>
+        </span>
+        </li>
+        <li><span class="parameter">opts</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+
+        <br>
+        <span class="parameter-description">
+        <p>
+     Delete range request options.</p>
+        </span>
+        <ul>
+        <li><span class="parameter">prev_kv</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Whether to return deleted key-value pairs in the response.
+</p>
+        </span>
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Response of the following structure:
+<p><pre> {
+     header = ResponseHeader,
+     deleted = integer (number of deleted keys),
+     prev_kvs = array of KeyValue (empty table when opts.prev_kv
+         is false or omitted),
+ }</pre>
+
+    </ol>
+
+    <h3>Raises:</h3>
+    See 'General API notes'.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/conf.client.etcd.html#ResponseHeader">ResponseHeader</a></li>
+         <li><a href="../modules/conf.client.etcd.html#KeyValue">KeyValue</a></li>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="General_API_notes"></a>General API notes </h2>
+
+          <div class="section-description">
+
+<p> Integers.
+<p> Whenever a request or response field is marked as <code>integer</code>,
+ the API accepts and may return two types: <code>number</code> or so
+ called <code>number64</code> (e.g. 1LL or 1ULL). Signed and unsigned
+ integers are not marked explicitly. One may find precise types
+ in the protocol description: <a href="https://github.com/etcd-io/etcd/blob/v3.4.15/mvcc/mvccpb/kv.proto">here</a> and <a href="https://github.com/etcd-io/etcd/blob/v3.4.15/etcdserver/etcdserverpb/rpc.proto">here</a>.
+<p>
+ The subsections below describe responses parts, which are
+ common for different responses.
+<p> Errors.
+<p> Functions of the module may raise different kinds of errors:
+<p> 1. Arguments validation error (Lua string).
+<p> 2. <a href="../modules/conf.client.etcd.html#EtcdError">EtcdError</a>.
+<p> 3. <a href="../modules/conf.client.etcd.html#HttpError">HttpError</a>.
+<p> 4. Internal HTTP client error: say, out-of-memory during the
+    request (<code>box.error</code> instance).
+<p> The subsections below describe content of those errors.
+
+          </div>
+    <dl class="function options">
+    <dt>
+    <a name="EtcdError"></a>
+    <strong>EtcdError</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">code</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     GRPC error code.
+<p>     Those codes are listed in the <code>conf.client.etcd.error</code>
+     module.</p>
+        </span>
+        </li>
+        <li><span class="parameter">message</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     What is going on wrong.</p>
+        </span>
+        </li>
+        <li><span class="parameter">details</span>
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Extra data if etcd provides it.</p>
+        </span>
+        </li>
+        <li><span class="parameter">code_name</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Human readable name of the code.</p>
+        </span>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name="HttpError"></a>
+    <strong>HttpError</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">response</span>
+
+        <br>
+        <span class="parameter-description">
+        <p>
+     Raw HTTP response.</p>
+        </span>
+        <ul>
+        <li><span class="parameter">status</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     HTTP code.</p>
+        </span>
+        </li>
+        <li><span class="parameter">reason</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Human readable interpretation of the code. Not very useful
+     at the moment of writting ('Ok' or 'Unknown').</p>
+        </span>
+        </li>
+        <li><span class="parameter">headers</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     HTTP headers.</p>
+        </span>
+        </li>
+        <li><span class="parameter">body</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     HTTP response body.</p>
+        </span>
+        </li>
+        </li></ul>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name="ResponseHeader"></a>
+    <strong>ResponseHeader</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">cluster_id</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     ID of the cluster, which sent the response.</p>
+        </span>
+        </li>
+        <li><span class="parameter">member_id</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     ID of the member, which sent the response.</p>
+        </span>
+        </li>
+        <li><span class="parameter">revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Storage revision, which is generated when the request was
+     applied.
+<p>     TODO: Clarify when the revision is guaranteed to grow
+     monotonically with modifications. I guess it is so for any
+     linearizable requests (when opts.serializable is not set
+     for a range request) or when we're sure there were no
+     reconnect to another cluster node.</p>
+        </span>
+        </li>
+        <li><span class="parameter">raft_term</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Raft term, when the request was applied.</p>
+        </span>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name="KeyValue"></a>
+    <strong>KeyValue</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     String representing the key. An empty string can not be
+     used as a key.</p>
+        </span>
+        </li>
+        <li><span class="parameter">create_revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Revision of last creation of this key.</p>
+        </span>
+        </li>
+        <li><span class="parameter">mod_revision</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Revision of last modification of this key.</p>
+        </span>
+        </li>
+        <li><span class="parameter">version</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Version of the key. A deletion resets it to zero, any
+     modification increases it.</p>
+        </span>
+        </li>
+        <li><span class="parameter">value</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Value associated with the key.</p>
+        </span>
+        </li>
+        <li><span class="parameter">lease</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>)
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Lease ID attached to the key. Zero indicates no lease.
+<p>     When the attached lease expires, the key will be deleted.</p>
+        </span>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+</div> <!-- id="container" -->
+</body>
+</html>

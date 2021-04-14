@@ -1,0 +1,546 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>conf API reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>conf</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Defaults">Defaults </a></li>
+<li><a href="#HTTP_options">HTTP options </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/conf.client.etcd.html">conf.client.etcd</a></li>
+  <li><strong>conf.client.etcd.transport</strong></li>
+  <li><a href="../modules/conf.html">conf</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>conf.client.etcd.transport</code></h1>
+<p>HTTP transport for etcd client.</p>
+<p><table class="markdown_table">
+</table>
+</p>
+
+
+<h2><a href="#Defaults">Defaults </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#http_client_new_opts_default">http_client_new_opts_default</a></td>
+	<td class="summary">Default HTTP client instance options.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#http_client_request_opts_default">http_client_request_opts_default</a></td>
+	<td class="summary">Default HTTP client request options.</td>
+	</tr>
+</table>
+<h2><a href="#HTTP_options">HTTP options </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#http_client_new_opts">http_client_new_opts</a></td>
+	<td class="summary">HTTP client instance options.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#http_client_request_opts">http_client_request_opts</a></td>
+	<td class="summary">HTTP client request options.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Defaults"></a>Defaults </h2>
+
+    <dl class="function defaults">
+    <dt>
+    <a name="http_client_new_opts_default"></a>
+    <strong>Default HTTP client instance options.</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+<p>
+ Just empty table at the moment.</p>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name="http_client_request_opts_default"></a>
+    <strong>Default HTTP client request options.</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+<p>
+ Enables <code>keepalive_*</code> options to enforce the HTTP client to
+ hold connections for a while in order to reuse them for next
+ requests.</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">keepalive_idle</span>
+        = <span class="parameter-value">60</span>
+        <br>
+        <span class="parameter-description">
+        <p><table class="markdown_table">
+</table>
+</p>
+        </span>
+        </li>
+        <li><span class="parameter">keepalive_interval</span>
+        = <span class="parameter-value">60</span>
+        <br>
+        <span class="parameter-description">
+        <p><table class="markdown_table">
+</table>
+</p>
+        </span>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="HTTP_options"></a>HTTP options </h2>
+
+    <dl class="function options">
+    <dt>
+    <a name="http_client_new_opts"></a>
+    <strong>HTTP client instance options.</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+<p>
+ Available HTTP client parameters may vary depending on
+ tarantool version. Refer to the HTTP client <a href="https://www.tarantool.io/en/doc/latest/reference/reference_lua/http/">documentation</a>
+ for precise list of available options.
+<p><table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">max_connections</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Maximum number of entries in the connection cache.</p>
+        </span>
+        </li>
+        <li><span class="parameter">max_total_connections</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Maximum number of active connections.
+<p> <span class="xxx">XXX</span>: verify descriptions
+ <span class="xxx">XXX</span>: defaults</p>
+        </span>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name="http_client_request_opts"></a>
+    <strong>HTTP client request options.</strong>
+    </dt>
+    <dd>
+    <table class="markdown_table">
+</table>
+<p>
+ Available HTTP client parameters may vary depending on
+ tarantool version. Refer to the HTTP client <a href="https://www.tarantool.io/en/doc/latest/reference/reference_lua/http/">documentation</a>
+ for precise list of available options.
+<p><table class="markdown_table">
+</table>
+</p>
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">ca_path</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A path to an SSL certificate directory.</p>
+        </span>
+        </li>
+        <li><span class="parameter">ca_file</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A path to an SSL certificate file.</p>
+        </span>
+        </li>
+        <li><span class="parameter">unix_socket</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     A path to a Unix domain socket.</p>
+        </span>
+        </li>
+        <li><span class="parameter">verify_host</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Whether to verify the certificate's name (CN) against host.</p>
+        </span>
+        </li>
+        <li><span class="parameter">verify_peer</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Whether to verify the peer's SSL certificate.</p>
+        </span>
+        </li>
+        <li><span class="parameter">ssl_key</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Set path to the file with a private key for a TLS and SSL
+     client certificate.</p>
+        </span>
+        </li>
+        <li><span class="parameter">ssl_cert</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Set path to the file with a SSL client certificate.</p>
+        </span>
+        </li>
+        <li><span class="parameter">proxy</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Set a proxy to use.</p>
+        </span>
+        </li>
+        <li><span class="parameter">proxy_port</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Set a port number the proxy listens on.</p>
+        </span>
+        </li>
+        <li><span class="parameter">proxy_user_pwd</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Set a user name and a password to use in authentication.</p>
+        </span>
+        </li>
+        <li><span class="parameter">no_proxy</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Disable proxy use for specific hosts.</p>
+        </span>
+        </li>
+        <li><span class="parameter">headers</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">table</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     HTTP headers. A table with strings keys and values, where
+     a key means an HTTP header name (a part before a colon) and
+     a value is the part after the colon.</p>
+        </span>
+        </li>
+        <li><span class="parameter">keepalive_idle</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Amount of seconds the connection should be idle before
+     the client will send a keepalive probe.
+<p>     Set it together with <code>keepalive_interval</code>, otherwise the
+     option will be ignored.</p>
+        </span>
+        </li>
+        <li><span class="parameter">keepalive_interval</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Amount of seconds between keepalive probes.
+<p>     Set it together with <code>keepalive_idle</code>, otherwise the
+     option will be ignored.</p>
+        </span>
+        </li>
+        <li><span class="parameter">low_speed_time</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     An average transfer speed in bytes per second that the
+     transfer should be below during <code>low_speed_limit</code> seconds
+     to consider it to be too slow and abort.</p>
+        </span>
+        </li>
+        <li><span class="parameter">low_speed_limit</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     See low_speed_time.</p>
+        </span>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">number</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Amount of seconds to wait for the response.</p>
+        </span>
+        </li>
+        <li><span class="parameter">max_header_name_length</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">integer</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Maximum length of a HTTP header name (a part before a
+     colon) in a response.
+<p>     A longer name is truncated.</p>
+        </span>
+        </li>
+        <li><span class="parameter">verbose</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Whether to print debugging information to stderr.</p>
+        </span>
+        </li>
+        <li><span class="parameter">interface</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+     Set network interface for outgoing connections.
+<p>     May be an interface name, an IP addres or a host name.
+     See syntax in the libcurl <a href="https://curl.se/libcurl/c/CURLOPT_INTERFACE.html">documentation</a>.
+</p>
+        </span>
+        </li>
+        <li><span class="parameter">follow_location</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">boolean</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+    Whether to follow the 'Location' header that a server sends
+    as part of an 3xx response.</p>
+        </span>
+        </li>
+        <li><span class="parameter">accept_encoding</span>
+            <span class="parameter-info">
+                (<span class="types"><span class="type">string</span></span>,
+                <span class="parameter-modifier">
+                <em>optional</em>)
+                </span>
+            </span>
+        <br>
+        <span class="parameter-description">
+        <p>
+    Set a list of accepted encodings, e.g. 'deflate, gzip'.
+    Enables automatic decompression of HTTP responses.
+<p>    Supported encodings are 'deflate' and 'gzip' (may vary
+    depending on how tarantool is built). Use '' (an empty
+    string) to enable all supported encodings.
+<p>    See more in the libcurl <a href="https://curl.se/libcurl/c/CURLOPT_ACCEPT_ENCODING.html">documentation</a>.
+<p>
+ <span class="xxx">XXX</span>: defaults where applicable</p>
+        </span>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+</div> <!-- id="container" -->
+</body>
+</html>
