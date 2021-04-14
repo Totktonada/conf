@@ -198,9 +198,6 @@ local function get(self, key)
     -- XXX: Make it transactional.
     local client = rawget(self, 'client')
 
-    -- XXX: Should we check it at reading?
-    assert_parent_is_a_table(self, key)
-
     local response_point = client:range(key)
     assert(response_point.count <= 1)
 
@@ -244,10 +241,6 @@ end
 local function del(self, key)
     -- XXX: Make it transactional.
     local client = rawget(self, 'client')
-
-    -- XXX: Should we check it before deletion?
-    assert_parent_is_a_table(self, key)
-
     client:deleterange(key)
     client:deleterange(key .. '.', client.NEXT)
 end

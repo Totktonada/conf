@@ -198,30 +198,51 @@ g.test_access_descendant_of_a_scalar = function()
     local value = gen_value()
     g.client:set(key, value)
 
-    -- Get/set/del a scalar 'inside' an existing scalar.
+    -- Set a scalar 'inside' an existing scalar.
+    --
+    -- It is forbidden.
     local child_key = ('%s.%s'):format(key, gen_key())
     local exp_err = ('Attempt to access "%s", but "%s" is a scalar'):format(
         child_key, key)
-    local ok, err = pcall(g.client.get, g.client, child_key)
-    check(ok, err, exp_err)
     local ok, err = pcall(g.client.set, g.client, child_key, gen_value())
     check(ok, err, exp_err)
-    local ok, err = pcall(g.client.del, g.client, child_key)
-    check(ok, err, exp_err)
 
-    -- Get/set/del a scalar deeply 'inside' an existing scalar.
+    -- Get returns nil for the 'inside scalar' key.
     --
-    -- Since there is no 'foo.bar' key, the 'no value' error is
-    -- reported at attempt to access 'foo.bar.baz'.
+    -- The logic is the following: we check parent's data type
+    -- only when operation may leave the data in an inconsistent
+    -- state (a value under scalar, a value under a non-existent
+    -- value).
+    --
+    -- So get() just tries to fetch the requested key and show
+    -- that there is no data under it.
+    local res = g.client:get(child_key)
+    t.assert_equals(res.data, nil)
+
+    -- Delete does not check whether a value exists and whether
+    -- its parent is a table. The logic is described above.
+    --
+    -- del() just removes the data if there is something to
+    -- remove.
+    local ok, err = pcall(g.client.del, g.client, child_key)
+    t.assert(ok)
+
+    -- Attempt to set a value 'inside' a non-existent value
+    -- that is under a scalar.
+    --
+    -- Since set() checks only parent's type, it see that there
+    -- is no parent key and reports this error.
     local descendant_key = ('%s.%s.%s'):format(key, gen_key(), gen_key())
     local exp_err = ('Attempt to access "%s", but there is no "%s"'):format(
         descendant_key, descendant_key:gsub('%.[^.]+$', ''))
-    local ok, err = pcall(g.client.get, g.client, descendant_key)
-    check(ok, err, exp_err)
     local ok, err = pcall(g.client.set, g.client, descendant_key, gen_value())
     check(ok, err, exp_err)
-    local ok, err = pcall(g.client.del, g.client, descendant_key)
-    check(ok, err, exp_err)
+
+    -- Everything is the same for get/del as in the cases above.
+    local res = g.client:get(descendant_key)
+    t.assert_equals(res.data, nil)
+    local ok = pcall(g.client.del, g.client, descendant_key)
+    t.assert(ok)
 end
 
 -- }}} Attempt to access a field of a scalar
@@ -229,6 +250,14 @@ end
 -- {{{ Access a field / an item of a non-existing value
 
 g.test_index_non_existing_value = function()
+    -- set() fails on attempt to put something into a non-existent
+    -- key.
+    --
+    -- get() and del() succeed.
+    --
+    -- See explanations in the
+    -- test_access_descendant_of_a_scalar() test case.
+
     local function check(ok, err, exp_err)
         local err_msg = tostring(err):gsub('^.-:.-: ', '')
         t.assert(not ok)
@@ -241,12 +270,14 @@ g.test_index_non_existing_value = function()
     local exp_err = ('Attempt to access "%s.%s", but there is no "%s"'):format(
         key_1, key_2, key_1)
 
-    local ok, err = pcall(g.client.get, g.client, key, gen_value())
-    check(ok, err, exp_err)
     local ok, err = pcall(g.client.set, g.client, key, gen_value())
     check(ok, err, exp_err)
-    local ok, err = pcall(g.client.del, g.client, key, gen_value())
-    check(ok, err, exp_err)
+
+    local res = g.client:get(key, gen_value())
+    t.assert_equals(res.data, nil)
+
+    local ok = pcall(g.client.del, g.client, key, gen_value())
+    t.assert(ok)
 end
 
 -- }}} Access a field / an item of a non-existing value
