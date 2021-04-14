@@ -1,5 +1,10 @@
 # conf
 
+## This branch (story-of-birth)
+
+This branch contains git history from the early development stage of the
+module. Unlikely it'll be interested for someone, but kept here just in case.
+
 ## Status
 
 Early beta.
