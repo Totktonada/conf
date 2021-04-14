@@ -20,8 +20,9 @@ g.before_all(function()
     before_all_default(g, {storage = storage})
 
     -- Create a client.
-    g.client = conf_lib.new(g.client_urls, {
+    g.client = conf_lib.new({
         driver = storage,
+        endpoints = g.client_urls,
     })
 end)
 
@@ -95,16 +96,15 @@ end
 -- {{{ .new() parameters validation
 
 g.test_new_params_validation = function()
-    local opts = {driver = 'etcd'}
     t.assert_error_msg_content_equals(
         'endpoints is the mandatory parameter',
-        conf_lib.new, nil, opts)
+        conf_lib.new, {driver = 'etcd'})
     t.assert_error_msg_content_equals(
         'endpoints parameter must be table, got string',
-        conf_lib.new, g.etcd_client_urls[1], opts)
+        conf_lib.new, {driver = 'etcd', endpoints = g.etcd_client_urls[1]})
     t.assert_error_msg_content_equals(
         'endpoints parameter must not be empty',
-        conf_lib.new, {}, opts)
+        conf_lib.new, {driver = 'etcd', endpoints = {}})
 end
 
 -- }}} .new() parameters validation

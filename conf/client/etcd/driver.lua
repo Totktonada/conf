@@ -184,9 +184,9 @@ end
 
 -- {{{ Module functions
 
-local function new(endpoints, opts)
+local function new(opts)
     return setmetatable({
-        client = etcd_client.new(endpoints, opts),
+        client = etcd_client.new(opts),
     }, mt)
 end
 

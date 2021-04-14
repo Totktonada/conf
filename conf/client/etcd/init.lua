@@ -70,11 +70,11 @@ local supported_server_api_versions = {
 -- [1]: https://etcd.io/docs/v3.4.0/op-guide/security/
 -- [2]: https://etcd.io/docs/v3.4.0/learning/design-auth-v3/
 --
--- @array[string] endpoints
---     Endpoint URLs.
--- @table[opt]   opts
+-- @table         opts
 --     etcd client options.
--- @string[opt]  opts.server_api_version
+-- @array[string] opts.endpoints
+--     Endpoint URLs.
+-- @string[opt]   opts.server_api_version
 --     This option allows to choose the server API version:
 --
 --     - 'v3' (default, suitable for etcd v3.4+).
@@ -87,16 +87,16 @@ local supported_server_api_versions = {
 --     See etcd gRPC gateway [documentation][1] for details.
 --
 --     [1]: https://etcd.io/docs/current/dev-guide/api_grpc_gateway/
--- @string[opt]  opts.user
+-- @string[opt]   opts.user
 --     A user ID to authenticate with the server.
--- @string[opt]  opts.password
+-- @string[opt]   opts.password
 --     A password to authenticate with given User ID.
--- @table[opt]   opts.http_client
+-- @table[opt]    opts.http_client
 --     HTTP client options.
--- @table[opt]   opts.http_client.new
+-- @table[opt]    opts.http_client.new
 --     @{etcd.transport.http_client_new_opts|HTTP client instance
 --     options}.
--- @table[opt]   opts.http_client.request
+-- @table[opt]    opts.http_client.request
 --     @{etcd.transport.http_client_request_opts|HTTP client
 --     request options}.
 --
@@ -105,7 +105,7 @@ local supported_server_api_versions = {
 -- @return etcd client instance.
 --
 -- @function conf.client.etcd.new
-local function new(endpoints, opts)
+local function new(opts)
     local opts = opts or {}
 
     -- XXX: Handle user & password: give transport a callback
@@ -123,7 +123,8 @@ local function new(endpoints, opts)
     return setmetatable({
         server_api_version = server_api_version,
         protocol = protocol.new(),
-        transport = transport.new(endpoints, {
+        transport = transport.new({
+            endpoints = opts.endpoints,
             http_client = opts.http_client,
         }),
     }, mt)

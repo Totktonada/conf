@@ -331,12 +331,13 @@ local mt = {
 
 -- Parameters:
 --
--- endpoints
+-- opts.endpoints
 -- opts.http_client.new
 -- opts.http_client.request
-local function new(endpoints, opts)
+local function new(opts)
     -- Merge given options with default ones.
     local opts = opts or {}
+    local endpoints = opts.endpoints
     local http_client_opts = opts.http_client or {}
     local http_client_new_opts = utils.merge_deep(http_client_opts.new or {},
         http_client_new_opts_default)

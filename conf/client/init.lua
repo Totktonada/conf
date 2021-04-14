@@ -19,8 +19,6 @@ local supported_drivers = {
 
 --- Create a new configuration storage client instance.
 --
--- @array[string] endpoints
---     Endpoint URLs.
 -- @table         opts
 --     Client options.
 --
@@ -30,6 +28,8 @@ local supported_drivers = {
 --     Driver name. Only 'etcd' is supported now.
 --
 --     It is the mandatory option.
+-- @array[string] opts.endpoints
+--     Endpoint URLs.
 --
 -- @raise See 'General API notes' in the @{conf.client.etcd|etcd
 -- client documentation}.
@@ -48,10 +48,10 @@ local supported_drivers = {
 --     'http://localhost:2381',
 --     'http://localhost:2383',
 -- }
--- local conf = conf.new(urls, {driver = 'etcd'})
+-- local conf = conf.new({driver = 'etcd', endpoints = urls})
 --
 -- @function conf.new
-local function new(endpoints, opts)
+local function new(opts)
     local opts = opts or {}
     local driver = opts.driver
     if driver == nil then
@@ -75,7 +75,7 @@ local function new(endpoints, opts)
         error('driver is not a string: only built-in drivers are supported now')
     end
     return setmetatable({
-        driver = driver.new(endpoints, opts),
+        driver = driver.new(opts),
     }, mt)
 end
 
