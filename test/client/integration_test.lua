@@ -224,7 +224,7 @@ g.test_access_descendant_of_a_scalar = function()
     --
     -- del() just removes the data if there is something to
     -- remove.
-    local ok, err = pcall(g.client.del, g.client, child_key)
+    local ok = pcall(g.client.del, g.client, child_key)
     t.assert(ok)
 
     -- Attempt to set a value 'inside' a non-existent value
